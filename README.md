@@ -140,10 +140,12 @@ This application is configured to deploy automatically to **GitHub Pages**.
 - **Note:** AI features (Plan Generation, 3D View) are **disabled** on the GitHub Pages demo because they require server-side execution (Next.js Server Actions).
 
 **To enable GitHub Pages for your fork:**
-1. Go to your repository **Settings**.
-2. Navigate to **Pages** (under Code and automation).
-3. Under **Build and deployment** > **Source**, select **GitHub Actions**.
-4. The deployment workflow (`.github/workflows/deploy.yml`) will automatically trigger on your next push to `main`.
+1. Wait for the initial GitHub Action to complete (this will create the `gh-pages` branch).
+2. Go to your repository **Settings**.
+3. Navigate to **Pages** (under Code and automation).
+4. Under **Build and deployment** > **Source**, select **Deploy from a branch**.
+5. Under **Branch**, select **gh-pages** and folder **/(root)**.
+6. Click **Save**.
 
 ### Full Deployment (with AI Features)
 To deploy the full version with AI capabilities, use a platform that supports Next.js Server Actions, such as **Vercel** or **Google Cloud Run**.
