@@ -32,7 +32,7 @@ export interface Selection {
 }
 
 export interface DragState {
-  type: 'room' | 'door';
+  type: 'room' | 'door' | 'canvas';
   id: string;
   startX: number;
   startY: number;

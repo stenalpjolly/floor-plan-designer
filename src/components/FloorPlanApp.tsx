@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, MouseEvent, ChangeEvent } from 'react';
+import React, { useState, useRef, useEffect, MouseEvent, ChangeEvent, WheelEvent } from 'react';
 import { Room, Door, Selection, DragState } from '@/types';
 import { useHistory } from '@/hooks/useHistory';
 import Toolbar from './floor-plan/Toolbar';
@@ -22,6 +22,9 @@ const FloorPlanApp = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(true);
   
+  // View State for Zoom/Pan
+  const [viewState, setViewState] = useState({ scale: 1, panX: 0, panY: 0 });
+
   // 3D Generation State
   const [is3DModalOpen, setIs3DModalOpen] = useState(false);
   const [isGenerating3D, setIsGenerating3D] = useState(false);
@@ -104,17 +107,74 @@ const FloorPlanApp = () => {
       }
   };
 
+  // --- Zoom / Pan Handlers ---
+  const handleZoomIn = () => {
+    setViewState(prev => ({ ...prev, scale: Math.min(prev.scale * 1.2, 5) }));
+  };
+
+  const handleZoomOut = () => {
+    setViewState(prev => ({ ...prev, scale: Math.max(prev.scale / 1.2, 0.1) }));
+  };
+
+  const handleResetView = () => {
+    setViewState({ scale: 1, panX: 0, panY: 0 });
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      setViewState(prev => ({
+        ...prev,
+        scale: Math.min(Math.max(prev.scale * scaleFactor, 0.1), 5)
+      }));
+    } else {
+        // Optional: Panning with wheel? Standard is vertical scroll usually.
+        // For now, let's support Zoom with Wheel (without Ctrl sometimes preferred in design tools, but standard web is Ctrl+Wheel)
+        // Design tools usually: Wheel = Pan Vertical, Shift+Wheel = Pan Horizontal, Ctrl+Wheel = Zoom.
+        // Let's stick to Ctrl+Wheel for Zoom.
+        // Or, implement simple Zoom on Wheel without modifier if we preventDefault?
+        // Given user instructions "zoon and pan", often implies easy zooming.
+        // Let's try Zoom on Wheel always for this "Canvas" area.
+        const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        setViewState(prev => ({
+            ...prev,
+            scale: Math.min(Math.max(prev.scale * scaleFactor, 0.1), 5)
+        }));
+    }
+  };
+
   // --- Dragging Logic ---
-  const handleMouseDown = (e: MouseEvent, type: 'room' | 'door', id: string) => {
-    e.stopPropagation();
-    setSelection({ type, id });
+  const handleMouseDown = (e: MouseEvent, type: 'room' | 'door' | 'canvas', id: string) => {
+    e.stopPropagation(); // Prevent bubbling
     
+    // If panning (canvas click), we don't set selection to 'canvas', we just track drag
+    if (type !== 'canvas') {
+        setSelection({ type: type as 'room' | 'door', id });
+    }
+
+    if (!containerRef.current) return;
+
+    if (type === 'canvas') {
+        setDragState({
+            type: 'canvas',
+            id: 'canvas',
+            startX: e.clientX,
+            startY: e.clientY,
+            initialX: viewState.panX,
+            initialY: viewState.panY
+        });
+        return;
+    }
+
     const item = type === 'room' ? rooms.find(r => r.id === id) : doors.find(d => d.id === id);
-    if (!item || !containerRef.current) return;
+    if (!item) return;
 
     const rect = containerRef.current.getBoundingClientRect();
-    const mouseXPercent = ((e.clientX - rect.left) / rect.width) * 100;
-    const mouseYPercent = ((e.clientY - rect.top) / rect.height) * 100;
+    // Calculate mouse position in "Canvas Percentage Coordinates"
+    // x% = ((ScreenX - RectLeft - PanX) / (RectWidth * Scale)) * 100
+    const mouseXPercent = ((e.clientX - rect.left - viewState.panX) / (rect.width * viewState.scale)) * 100;
+    const mouseYPercent = ((e.clientY - rect.top - viewState.panY) / (rect.width * viewState.scale)) * 100;
 
     setDragState({
       type,
@@ -129,9 +189,25 @@ const FloorPlanApp = () => {
   const handleMouseMove = (e: globalThis.MouseEvent) => {
     if (!dragState || !containerRef.current) return;
 
+    // --- Panning Logic ---
+    if (dragState.type === 'canvas') {
+        const deltaX = e.clientX - dragState.startX;
+        const deltaY = e.clientY - dragState.startY;
+        
+        setViewState(prev => ({
+            ...prev,
+            panX: dragState.initialX + deltaX,
+            panY: dragState.initialY + deltaY
+        }));
+        return;
+    }
+
+    // --- Item Dragging Logic ---
     const rect = containerRef.current.getBoundingClientRect();
-    const currentMouseXPercent = ((e.clientX - rect.left) / rect.width) * 100;
-    const currentMouseYPercent = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    // Calculate current mouse position in "Canvas Percentage Coordinates"
+    const currentMouseXPercent = ((e.clientX - rect.left - viewState.panX) / (rect.width * viewState.scale)) * 100;
+    const currentMouseYPercent = ((e.clientY - rect.top - viewState.panY) / (rect.width * viewState.scale)) * 100;
 
     const deltaX = currentMouseXPercent - dragState.startX;
     const deltaY = currentMouseYPercent - dragState.startY;
@@ -185,8 +261,10 @@ const FloorPlanApp = () => {
 
   const handleMouseUp = () => {
     if (dragState) {
-        // Commit the changes made during drag
-        setState(prev => prev);
+        // Commit the changes made during drag (only if not panning)
+        if (dragState.type !== 'canvas') {
+            setState(prev => prev);
+        }
     }
     setDragState(null);
   };
@@ -385,7 +463,7 @@ const FloorPlanApp = () => {
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [dragState]);
+  }, [dragState, viewState]); // Added viewState dependency for accurate dragging calculations
 
   // --- Keyboard Shortcuts ---
   useEffect(() => {
@@ -500,6 +578,10 @@ const FloorPlanApp = () => {
         onRedo={redo}
         canUndo={canUndo}
         canRedo={canRedo}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onResetView={handleResetView}
+        scale={viewState.scale}
       />
 
       <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 h-[80vh]">
@@ -511,9 +593,11 @@ const FloorPlanApp = () => {
            selection={selection}
            dragState={dragState}
            showDimensions={showDimensions}
+           viewState={viewState}
            onMouseDown={handleMouseDown}
            onSelectionClear={() => setSelection(null)}
            onUpdateRoomType={updateRoomType}
+           onWheel={handleWheel}
         />
 
         <Sidebar 

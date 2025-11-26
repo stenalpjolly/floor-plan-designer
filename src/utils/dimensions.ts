@@ -1,5 +1,5 @@
-export const CANVAS_WIDTH_FT = 60;
-export const CANVAS_HEIGHT_FT = 40;
+export const CANVAS_WIDTH_FT = 100;
+export const CANVAS_HEIGHT_FT = 100;
 
 /**
  * Calculates the dimensions string based on percentage width and height relative to the canvas scale.

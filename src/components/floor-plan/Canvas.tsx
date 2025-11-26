@@ -26,9 +26,11 @@ interface CanvasProps {
   selection: Selection | null;
   dragState: DragState | null;
   showDimensions: boolean;
-  onMouseDown: (e: MouseEvent, type: 'room' | 'door', id: string) => void;
+  viewState: { scale: number; panX: number; panY: number };
+  onMouseDown: (e: MouseEvent, type: 'room' | 'door' | 'canvas', id: string) => void;
   onSelectionClear: () => void;
   onUpdateRoomType: (roomId: string, type: string, name: string) => void;
+  onWheel?: (e: React.WheelEvent) => void;
 }
 
 const ROOM_TYPES = [
@@ -54,9 +56,11 @@ const Canvas: React.FC<CanvasProps> = ({
   selection,
   dragState,
   showDimensions,
+  viewState,
   onMouseDown,
   onSelectionClear,
-  onUpdateRoomType
+  onUpdateRoomType,
+  onWheel
 }) => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; roomId: string } | null>(null);
 
@@ -74,22 +78,32 @@ const Canvas: React.FC<CanvasProps> = ({
 
   return (
     <div
-      className="flex-grow relative bg-[#f9f5eb] rounded shadow-inner border-[6px] border-[#5c4d3c] overflow-hidden cursor-crosshair"
-      style={{ aspectRatio: '3/2' }}
+      className="flex-grow relative bg-[#f9f5eb] rounded shadow-inner border-[6px] border-[#5c4d3c] overflow-hidden cursor-crosshair w-full h-full"
       ref={containerRef}
       onClick={onSelectionClear}
+      onMouseDown={(e) => onMouseDown(e, 'canvas', 'canvas')}
+      onWheel={onWheel}
     >
-        {/* Grid Background */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none" 
-             style={{ 
-               backgroundImage: `
-                 linear-gradient(#5c4d3c 1px, transparent 1px),
-                 linear-gradient(90deg, #5c4d3c 1px, transparent 1px)
-               `, 
-               backgroundSize: '40px 40px' 
-             }}>
-        </div>
+      {/* Grid Background - Fixed to viewport but animates properties to simulate infinite grid */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none"
+           style={{
+             backgroundImage: `
+               linear-gradient(#5c4d3c 1px, transparent 1px),
+               linear-gradient(90deg, #5c4d3c 1px, transparent 1px)
+             `,
+             backgroundSize: `${40 * viewState.scale}px ${40 * viewState.scale}px`,
+             backgroundPosition: `${viewState.panX}px ${viewState.panY}px`
+           }}>
+      </div>
 
+      <div
+        className="absolute top-0 left-0 origin-top-left will-change-transform"
+        style={{
+          transform: `translate(${viewState.panX}px, ${viewState.panY}px) scale(${viewState.scale})`,
+          width: '100%',
+          aspectRatio: '1 / 1'
+        }}
+      >
         {/* Rooms */}
         {rooms.map((room) => (
           <RoomItem
@@ -125,7 +139,7 @@ const Canvas: React.FC<CanvasProps> = ({
             onMouseDown={onMouseDown}
           />
         ))}
-        
+      </div>
     </div>
   );
 };

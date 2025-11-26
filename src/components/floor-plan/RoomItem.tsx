@@ -42,6 +42,7 @@ const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDim
       className={`absolute flex flex-col items-center justify-center text-center overflow-hidden transition-shadow group
         ${getRoomColor(room.type)}
         ${selection?.id === room.id ? 'z-10 ring-4 ring-[#d4a373] shadow-2xl' : 'z-0 hover:z-10'}
+        ${!validation.isValid && selection?.id !== room.id ? 'ring-2 ring-red-500' : ''}
         ${dragState?.id === room.id ? 'cursor-grabbing opacity-90' : 'cursor-grab'}
       `}
       style={{

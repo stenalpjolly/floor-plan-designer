@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useRef } from 'react';
-import { Home, Download, Upload, DoorOpen, Plus, Ruler, Undo, Redo, Box, Image as ImageIcon } from 'lucide-react';
+import { Home, Download, Upload, DoorOpen, Plus, Ruler, Undo, Redo, Box, Image as ImageIcon, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 
 interface ToolbarProps {
   showDimensions: boolean;
@@ -14,6 +14,10 @@ interface ToolbarProps {
   canRedo: boolean;
   onGenerate3D: () => void;
   onDownloadImage: () => void;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onResetView: () => void;
+  scale: number;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -29,6 +33,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
   canRedo,
   onGenerate3D,
   onDownloadImage,
+  onZoomIn,
+  onZoomOut,
+  onResetView,
+  scale,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,6 +80,33 @@ const Toolbar: React.FC<ToolbarProps> = ({
               title="Redo"
             >
               <Redo className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex gap-2 mr-2 pr-2 border-r border-[#d4c5a9]">
+            <button
+              onClick={onZoomOut}
+              className="p-2 text-[#5c4d3c] hover:bg-[#d4c5a9] rounded transition-colors"
+              title="Zoom Out"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <span className="flex items-center text-xs font-mono text-[#5c4d3c] min-w-[3rem] justify-center">
+              {Math.round(scale * 100)}%
+            </span>
+            <button
+              onClick={onZoomIn}
+              className="p-2 text-[#5c4d3c] hover:bg-[#d4c5a9] rounded transition-colors"
+              title="Zoom In"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onResetView}
+              className="p-2 text-[#5c4d3c] hover:bg-[#d4c5a9] rounded transition-colors"
+              title="Reset View"
+            >
+              <Maximize className="w-4 h-4" />
             </button>
           </div>
 
