@@ -37,7 +37,7 @@ export async function generate3DView(floorPlanContext: string, imageBase64?: str
       CONTEXT: ${floorPlanContext}
       
       REQUIREMENTS:
-      - View: Isometric 3D from a top-down angle (approx 45 degrees).
+      - View: Isometric 3D from a top-down angle (0 degrees).
       - Lighting: Bright, natural lighting.
       - Style: Modern, clean, architectural.
       - Furnishing: Realistic furniture.
