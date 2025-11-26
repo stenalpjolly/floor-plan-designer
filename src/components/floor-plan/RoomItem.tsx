@@ -1,6 +1,7 @@
 import React, { MouseEvent } from 'react';
-import { Move } from 'lucide-react';
+import { Move, AlertTriangle } from 'lucide-react';
 import { Room, Selection, DragState } from '@/types';
+import { validateRoom } from '@/utils/validation';
 
 interface RoomItemProps {
   room: Room;
@@ -31,6 +32,8 @@ const getRoomColor = (type: string) => {
 };
 
 const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDimensions, onMouseDown, onContextMenu }) => {
+  const validation = validateRoom(room);
+
   return (
     <div
       onMouseDown={(e) => onMouseDown(e, 'room', room.id)}
@@ -79,6 +82,13 @@ const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDim
          <div className="absolute bottom-1 right-1 opacity-50 pointer-events-none">
            <Move className="w-3 h-3 text-[#4a3b2a]" />
          </div>
+      )}
+
+      {/* Validation Warning */}
+      {!validation.isValid && (
+        <div className="absolute top-1 right-1 text-red-600 bg-white/80 rounded-full p-0.5" title={validation.message}>
+          <AlertTriangle className="w-3 h-3" />
+        </div>
       )}
     </div>
   );

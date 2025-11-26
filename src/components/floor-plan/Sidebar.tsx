@@ -1,6 +1,7 @@
 import React from 'react';
-import { Copy, Trash2, MousePointer2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RotateCcw, Layout, Grid, Plus, Minus } from 'lucide-react';
+import { Copy, Trash2, MousePointer2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RotateCcw, Layout, Grid, Plus, Minus, AlertTriangle } from 'lucide-react';
 import { Room, Door, Selection } from '@/types';
+import { validateRoom } from '@/utils/validation';
 
 interface SidebarProps {
   selection: Selection | null;
@@ -73,6 +74,9 @@ const Sidebar: React.FC<SidebarProps> = ({
            }
       });
   };
+
+  const roomValidation = selectedRoom ? validateRoom(selectedRoom) : null;
+
   return (
     <div className="w-full lg:w-80 flex-shrink-0 bg-[#f4ece0] border-l-4 border-[#d4c5a9] lg:border-l-0 lg:border border-[#d4c5a9] shadow-xl flex flex-col">
       <div className="p-4 bg-[#5c4d3c] text-[#f4ece0] flex justify-between items-center">
@@ -104,6 +108,15 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-grow p-6 overflow-y-auto">
         {selectedRoom && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right duration-200">
+            
+            {/* Validation Warning */}
+            {roomValidation && !roomValidation.isValid && (
+              <div className="bg-red-50 border border-red-200 p-3 rounded text-red-700 text-xs flex gap-2 items-start">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>{roomValidation.message}</span>
+              </div>
+            )}
+
             {/* --- 1. SMART ACTIONS (Clone & Flip) --- */}
             <div className="bg-[#e8dfce] p-3 rounded border border-[#d4c5a9]">
                <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-2 flex items-center gap-1">
