@@ -38,6 +38,9 @@ jobs:
         env:
           NEXT_PUBLIC_ENABLE_AI: "false"
 
+      - name: Create .nojekyll file
+        run: touch out/.nojekyll
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
