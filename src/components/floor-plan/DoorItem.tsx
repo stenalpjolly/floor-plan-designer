@@ -130,7 +130,7 @@ const DoorItem: React.FC<DoorItemProps> = ({ door, selection, onMouseDown }) => 
       onMouseDown={(e) => onMouseDown(e, 'door', door.id)}
       onClick={(e) => e.stopPropagation()}
       className={`absolute z-20 cursor-move flex items-center justify-center
-        ${selection?.id === door.id ? 'ring-2 ring-blue-500' : ''}
+        ${selection?.id === door.id ? 'shadow-[0_0_0_2px_#3b82f6]' : ''}
       `}
       style={{
         left: `${door.x}%`,

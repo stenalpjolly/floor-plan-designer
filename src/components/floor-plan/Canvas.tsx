@@ -14,20 +14,23 @@ import {
   Warehouse,
   DoorOpen
 } from 'lucide-react';
-import { Room, Door, Selection, DragState } from '@/types';
+import { Room, Door, Furniture, Selection, DragState } from '@/types';
 import RoomItem from './RoomItem';
 import DoorItem from './DoorItem';
+import FurnitureItem from './FurnitureItem';
 import ContextMenu from './ContextMenu';
 
 interface CanvasProps {
   containerRef: RefObject<HTMLDivElement | null>;
   rooms: Room[];
   doors: Door[];
+  furniture: Furniture[];
   selection: Selection | null;
   dragState: DragState | null;
   showDimensions: boolean;
   viewState: { scale: number; panX: number; panY: number };
-  onMouseDown: (e: MouseEvent, type: 'room' | 'door' | 'canvas', id: string) => void;
+  appMode: 'structure' | 'interior';
+  onMouseDown: (e: MouseEvent, type: 'room' | 'door' | 'canvas' | 'furniture', id: string) => void;
   onSelectionClear: () => void;
   onUpdateRoomType: (roomId: string, type: string, name: string) => void;
   onWheel?: (e: React.WheelEvent) => void;
@@ -53,10 +56,12 @@ const Canvas: React.FC<CanvasProps> = ({
   containerRef,
   rooms,
   doors,
+  furniture,
   selection,
   dragState,
   showDimensions,
   viewState,
+  appMode,
   onMouseDown,
   onSelectionClear,
   onUpdateRoomType,
@@ -105,41 +110,58 @@ const Canvas: React.FC<CanvasProps> = ({
         }}
       >
         {/* Rooms */}
-        {rooms.map((room) => (
-          <RoomItem
-            key={room.id}
-            room={room}
-            selection={selection}
-            dragState={dragState}
-            showDimensions={showDimensions}
-            onMouseDown={onMouseDown}
-            onContextMenu={handleRoomContextMenu}
-          />
-        ))}
-
-        {contextMenu && (
-          <ContextMenu
-            x={contextMenu.x}
-            y={contextMenu.y}
-            onClose={() => setContextMenu(null)}
-            options={ROOM_TYPES.map(type => ({
-              label: type.label,
-              icon: type.icon,
-              action: () => onUpdateRoomType(contextMenu.roomId, type.value, type.label)
-            }))}
-          />
-        )}
+        <div className={appMode === 'interior' ? 'pointer-events-none' : ''}>
+            {rooms.map((room) => (
+            <RoomItem
+                key={room.id}
+                room={room}
+                selection={selection}
+                dragState={dragState}
+                showDimensions={showDimensions}
+                onMouseDown={onMouseDown}
+                onContextMenu={handleRoomContextMenu}
+            />
+            ))}
+        </div>
 
         {/* Doors */}
-        {doors.map((door) => (
-          <DoorItem
-            key={door.id}
-            door={door}
-            selection={selection}
-            onMouseDown={onMouseDown}
-          />
-        ))}
+        <div className={appMode === 'interior' ? 'pointer-events-none' : ''}>
+            {doors.map((door) => (
+            <DoorItem
+                key={door.id}
+                door={door}
+                selection={selection}
+                onMouseDown={onMouseDown}
+            />
+            ))}
+        </div>
+
+        {/* Furniture */}
+        <div className={appMode === 'structure' ? 'pointer-events-none opacity-80' : ''}>
+            {furniture.map((item) => (
+                <FurnitureItem
+                    key={item.id}
+                    furniture={item}
+                    selection={selection}
+                    dragState={dragState}
+                    onMouseDown={onMouseDown}
+                />
+            ))}
+        </div>
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+          options={ROOM_TYPES.map(type => ({
+            label: type.label,
+            icon: type.icon,
+            action: () => onUpdateRoomType(contextMenu.roomId, type.value, type.label)
+          }))}
+        />
+      )}
     </div>
   );
 };

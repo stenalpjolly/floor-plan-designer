@@ -1,18 +1,22 @@
 import React from 'react';
-import { Copy, Trash2, MousePointer2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RotateCcw, Layout, Grid, Plus, Minus, AlertTriangle } from 'lucide-react';
-import { Room, Door, Selection } from '@/types';
+import { Copy, Trash2, MousePointer2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RotateCcw, Layout, Grid, Plus, Minus, AlertTriangle, BedDouble, BedSingle, Sofa, Utensils, Monitor, Archive, Armchair, Flower2, Bath, Droplets, CloudRain } from 'lucide-react';
+import { Room, Door, Furniture, Selection } from '@/types';
 import { validateRoom } from '@/utils/validation';
 
 interface SidebarProps {
+  appMode: 'structure' | 'interior';
   selection: Selection | null;
   selectedRoom: Room | null;
   selectedDoor: Door | null;
+  selectedFurniture: Furniture | null;
   onDuplicateRoom: (roomId: string) => void;
   onDuplicateRoomDirectional: (roomId: string, direction: 'top' | 'bottom' | 'left' | 'right') => void;
   onDeleteItem: () => void;
   onUpdateRoom: (id: string, field: keyof Room, value: any) => void;
   onToggleWall: (roomId: string, wall: keyof Room['borders']) => void;
   onUpdateDoor: (id: string, field: keyof Door, value: any) => void;
+  onAddFurniture: (type: string) => void;
+  onUpdateFurniture: (id: string, field: keyof Furniture, value: any) => void;
 }
 
 // Preset Definitions for "Smart Types"
@@ -27,16 +31,36 @@ const ROOM_PRESETS = {
     garage: { label: 'Garage', w: 20, h: 20, color: '#e0e0e0' },
 };
 
+const FURNITURE_LIBRARY = [
+    { type: 'bed_queen', label: 'Queen Bed', icon: <BedDouble className="w-5 h-5" /> },
+    { type: 'bed_single', label: 'Single Bed', icon: <BedSingle className="w-5 h-5" /> },
+    { type: 'sofa_3', label: '3-Seat Sofa', icon: <Sofa className="w-5 h-5" /> },
+    { type: 'sofa_2', label: '2-Seat Sofa', icon: <Armchair className="w-5 h-5" /> },
+    { type: 'table_dining', label: 'Dining Table', icon: <Utensils className="w-5 h-5" /> },
+    { type: 'table_round', label: 'Round Table', icon: <Utensils className="w-5 h-5" /> },
+    { type: 'desk', label: 'Office Desk', icon: <Monitor className="w-5 h-5" /> },
+    { type: 'wardrobe', label: 'Wardrobe', icon: <Archive className="w-5 h-5" /> },
+    { type: 'tv_unit', label: 'TV Unit', icon: <Monitor className="w-5 h-5" /> },
+    { type: 'toilet', label: 'Toilet', icon: <Bath className="w-5 h-5" /> },
+    { type: 'sink', label: 'Sink', icon: <Droplets className="w-5 h-5" /> },
+    { type: 'shower', label: 'Shower', icon: <CloudRain className="w-5 h-5" /> },
+    { type: 'plant', label: 'Indoor Plant', icon: <Flower2 className="w-5 h-5" /> },
+];
+
 const Sidebar: React.FC<SidebarProps> = ({
+  appMode,
   selection,
   selectedRoom,
   selectedDoor,
+  selectedFurniture,
   onDuplicateRoom,
   onDuplicateRoomDirectional,
   onDeleteItem,
   onUpdateRoom,
   onToggleWall,
-  onUpdateDoor
+  onUpdateDoor,
+  onAddFurniture,
+  onUpdateFurniture
 }) => {
   
   const handleApplyPreset = (type: string) => {
@@ -81,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     <div className="w-full lg:w-80 flex-shrink-0 bg-[#f4ece0] border-l-4 border-[#d4c5a9] lg:border-l-0 lg:border border-[#d4c5a9] shadow-xl flex flex-col">
       <div className="p-4 bg-[#5c4d3c] text-[#f4ece0] flex justify-between items-center">
         <h2 className="font-bold text-lg">
-          {selectedRoom ? 'Room Properties' : selectedDoor ? 'Door Properties' : 'Editor'}
+          {appMode === 'interior' ? 'Interior Design' : (selectedRoom ? 'Room Properties' : selectedDoor ? 'Door Properties' : 'Structure Editor')}
         </h2>
         {selection && (
           <div className="flex gap-2">
@@ -363,7 +387,71 @@ const Sidebar: React.FC<SidebarProps> = ({
            </div>
         )}
 
-        {!selection && (
+        {selectedFurniture && appMode === 'interior' && (
+             <div className="space-y-6 animate-in fade-in slide-in-from-right duration-200">
+                 <div className="bg-white/50 p-4 rounded border border-[#d4c5a9]">
+                    <h3 className="font-bold text-[#5c4d3c] mb-4">Furniture Settings</h3>
+                    
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Rotation</label>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => onUpdateFurniture(selectedFurniture.id, 'rotation', (selectedFurniture.rotation - 45 + 360) % 360)}
+                                    className="flex-1 py-2 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors"
+                                >-45°</button>
+                                <button
+                                    onClick={() => onUpdateFurniture(selectedFurniture.id, 'rotation', (selectedFurniture.rotation + 45) % 360)}
+                                    className="flex-1 py-2 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors"
+                                >+45°</button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                           <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Size (ft)</label>
+                           <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <span className="text-xs text-[#8c7b66]">Width</span>
+                                    <div className="flex items-center gap-1">
+                                        <button onClick={() => onUpdateFurniture(selectedFurniture.id, 'width', Math.max(1, selectedFurniture.width - 0.5))} className="p-1 bg-white rounded border"><Minus className="w-3 h-3"/></button>
+                                        <span className="flex-1 text-center text-sm font-bold">{selectedFurniture.width}</span>
+                                        <button onClick={() => onUpdateFurniture(selectedFurniture.id, 'width', selectedFurniture.width + 0.5)} className="p-1 bg-white rounded border"><Plus className="w-3 h-3"/></button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-[#8c7b66]">Depth</span>
+                                    <div className="flex items-center gap-1">
+                                        <button onClick={() => onUpdateFurniture(selectedFurniture.id, 'depth', Math.max(1, selectedFurniture.depth - 0.5))} className="p-1 bg-white rounded border"><Minus className="w-3 h-3"/></button>
+                                        <span className="flex-1 text-center text-sm font-bold">{selectedFurniture.depth}</span>
+                                        <button onClick={() => onUpdateFurniture(selectedFurniture.id, 'depth', selectedFurniture.depth + 0.5)} className="p-1 bg-white rounded border"><Plus className="w-3 h-3"/></button>
+                                    </div>
+                                </div>
+                           </div>
+                        </div>
+                    </div>
+                 </div>
+             </div>
+        )}
+
+        {!selection && appMode === 'interior' && (
+             <div className="space-y-4">
+                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Library</h3>
+                 <div className="grid grid-cols-2 gap-2">
+                     {FURNITURE_LIBRARY.map(item => (
+                         <button
+                             key={item.type}
+                             onClick={() => onAddFurniture(item.type)}
+                             className="flex flex-col items-center justify-center p-3 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors gap-2"
+                         >
+                             {item.icon}
+                             <span className="text-xs font-medium">{item.label}</span>
+                         </button>
+                     ))}
+                 </div>
+             </div>
+        )}
+
+        {!selection && appMode === 'structure' && (
           <div className="h-full flex flex-col items-center justify-center text-center text-[#8c7b66] opacity-60">
             <MousePointer2 className="w-12 h-12 mb-2" />
             <p>Select a room or door to edit its properties.</p>

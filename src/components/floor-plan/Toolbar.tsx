@@ -18,6 +18,9 @@ interface ToolbarProps {
   onZoomOut: () => void;
   onResetView: () => void;
   scale: number;
+  totalArea: number;
+  appMode: 'structure' | 'interior';
+  setAppMode: (mode: 'structure' | 'interior') => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -37,6 +40,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onZoomOut,
   onResetView,
   scale,
+  totalArea,
+  appMode,
+  setAppMode
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,7 +65,24 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <Home className="w-6 h-6" />
             Floor Plan Architect
           </h1>
-          <p className="text-[#8c7b66] text-xs uppercase tracking-widest">Interactive Editor Mode</p>
+          <div className="flex items-center gap-4">
+             <div className="flex bg-[#e8dfce] p-1 rounded-lg border border-[#d4c5a9]">
+                <button
+                   onClick={() => setAppMode('structure')}
+                   className={`px-3 py-1 text-xs font-bold rounded transition-all ${appMode === 'structure' ? 'bg-[#5c4d3c] text-white shadow-sm' : 'text-[#8c7b66] hover:text-[#5c4d3c]'}`}
+                >
+                    Structure
+                </button>
+                <button
+                   onClick={() => setAppMode('interior')}
+                   className={`px-3 py-1 text-xs font-bold rounded transition-all ${appMode === 'interior' ? 'bg-[#5c4d3c] text-white shadow-sm' : 'text-[#8c7b66] hover:text-[#5c4d3c]'}`}
+                >
+                    Interior
+                </button>
+             </div>
+            <div className="hidden md:block h-4 w-px bg-[#d4c5a9]"></div>
+            <p className="text-[#5c4d3c] text-sm font-bold">Total Area: {totalArea} sq.ft</p>
+          </div>
         </div>
         
         {/* Top Controls */}
@@ -142,18 +165,22 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <Box className="w-4 h-4" /> 3D View
           </button>
 
-          <button
-            onClick={onAddDoor}
-            className="flex items-center gap-2 px-3 py-2 bg-white text-[#5c4d3c] border border-[#5c4d3c] rounded shadow-sm hover:bg-[#f9f5eb] transition-colors"
-          >
-            <DoorOpen className="w-4 h-4" /> Add Door
-          </button>
-          <button 
-            onClick={onAddRoom}
-            className="flex items-center gap-2 px-3 py-2 bg-[#5c4d3c] text-[#f4ece0] rounded shadow hover:bg-[#4a3b2a] transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Add Room
-          </button>
+          {appMode === 'structure' && (
+            <>
+            <button
+                onClick={onAddDoor}
+                className="flex items-center gap-2 px-3 py-2 bg-white text-[#5c4d3c] border border-[#5c4d3c] rounded shadow-sm hover:bg-[#f9f5eb] transition-colors"
+            >
+                <DoorOpen className="w-4 h-4" /> Add Door
+            </button>
+            <button
+                onClick={onAddRoom}
+                className="flex items-center gap-2 px-3 py-2 bg-[#5c4d3c] text-[#f4ece0] rounded shadow hover:bg-[#4a3b2a] transition-colors"
+            >
+                <Plus className="w-4 h-4" /> Add Room
+            </button>
+            </>
+          )}
           <button 
             onClick={() => setShowDimensions(!showDimensions)}
             className={`flex items-center gap-2 px-3 py-2 rounded border border-[#5c4d3c] transition-colors ${showDimensions ? 'bg-[#d4c5a9]' : 'bg-transparent'}`}

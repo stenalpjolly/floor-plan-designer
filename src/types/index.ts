@@ -26,13 +26,23 @@ export interface Door {
   width?: number; // Width in feet
 }
 
+export interface Furniture {
+  id: string;
+  type: string;
+  x: number; // Percentage (0-100)
+  y: number; // Percentage (0-100)
+  rotation: number; // Degrees (0, 90, 180, 270)
+  width: number; // Width in feet
+  depth: number; // Depth in feet
+}
+
 export interface Selection {
-  type: 'room' | 'door';
+  type: 'room' | 'door' | 'furniture';
   id: string;
 }
 
 export interface DragState {
-  type: 'room' | 'door' | 'canvas';
+  type: 'room' | 'door' | 'canvas' | 'furniture';
   id: string;
   startX: number;
   startY: number;

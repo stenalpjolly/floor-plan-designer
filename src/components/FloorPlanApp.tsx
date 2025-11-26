@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, MouseEvent, ChangeEvent, WheelEvent } from 'react';
-import { Room, Door, Selection, DragState } from '@/types';
+import { Room, Door, Furniture, Selection, DragState } from '@/types';
 import { useHistory } from '@/hooks/useHistory';
 import Toolbar from './floor-plan/Toolbar';
 import Canvas from './floor-plan/Canvas';
@@ -12,11 +12,12 @@ import html2canvas from 'html2canvas';
 import { generateFloorPlan } from '@/app/actions/generate-plan';
 import { generate3DView } from '@/app/actions/generate-3d-view';
 import { buildFloorPlanPrompt } from '@/utils/prompt-builder';
-import { calculateDimensions } from '@/utils/dimensions';
+import { calculateDimensions, calculateArea } from '@/utils/dimensions';
 
 const FloorPlanApp = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [selection, setSelection] = useState<Selection | null>(null); // { type: 'room' | 'door', id: string }
+  const [appMode, setAppMode] = useState<'structure' | 'interior'>('structure');
+  const [selection, setSelection] = useState<Selection | null>(null); // { type: 'room' | 'door' | 'furniture', id: string }
   const [showDimensions, setShowDimensions] = useState(true);
   const [dragState, setDragState] = useState<DragState | null>(null); // { type, id, startX, startY, initialX, initialY }
   const [isGenerating, setIsGenerating] = useState(false);
@@ -39,11 +40,11 @@ const FloorPlanApp = () => {
     redo,
     canUndo,
     canRedo
-  } = useHistory<{ rooms: Room[], doors: Door[] }>({ rooms: [], doors: [] });
+  } = useHistory<{ rooms: Room[], doors: Door[], furniture: Furniture[] }>({ rooms: [], doors: [], furniture: [] });
   
-  const { rooms, doors } = floorPlan;
+  const { rooms, doors, furniture } = floorPlan;
   
-  const [clipboard, setClipboard] = useState<{ type: 'room' | 'door', data: Room | Door } | null>(null);
+  const [clipboard, setClipboard] = useState<{ type: 'room' | 'door' | 'furniture', data: Room | Door | Furniture } | null>(null);
 
   const handleGeneratePlan = async (prompt: string) => {
     try {
@@ -57,7 +58,8 @@ const FloorPlanApp = () => {
       
       setState({
         rooms: sanitizedRooms,
-        doors: plan.doors.map(door => ({ ...door, type: 'standard' }))
+        doors: plan.doors.map(door => ({ ...door, type: 'standard' })),
+        furniture: []
       });
       
       setIsPromptModalOpen(false);
@@ -145,12 +147,16 @@ const FloorPlanApp = () => {
   };
 
   // --- Dragging Logic ---
-  const handleMouseDown = (e: MouseEvent, type: 'room' | 'door' | 'canvas', id: string) => {
+  const handleMouseDown = (e: MouseEvent, type: 'room' | 'door' | 'canvas' | 'furniture', id: string) => {
     e.stopPropagation(); // Prevent bubbling
-    
+
     // If panning (canvas click), we don't set selection to 'canvas', we just track drag
     if (type !== 'canvas') {
-        setSelection({ type: type as 'room' | 'door', id });
+        // Prevent selecting wrong items based on mode
+        if (appMode === 'structure' && type === 'furniture') return;
+        if (appMode === 'interior' && (type === 'room' || type === 'door')) return;
+
+        setSelection({ type: type as 'room' | 'door' | 'furniture', id });
     }
 
     if (!containerRef.current) return;
@@ -167,7 +173,11 @@ const FloorPlanApp = () => {
         return;
     }
 
-    const item = type === 'room' ? rooms.find(r => r.id === id) : doors.find(d => d.id === id);
+    let item;
+    if (type === 'room') item = rooms.find(r => r.id === id);
+    else if (type === 'door') item = doors.find(d => d.id === id);
+    else if (type === 'furniture') item = furniture.find(f => f.id === id);
+
     if (!item) return;
 
     const rect = containerRef.current.getBoundingClientRect();
@@ -251,10 +261,15 @@ const FloorPlanApp = () => {
             ...prev,
             rooms: prev.rooms.map(r => r.id === dragState.id ? { ...r, x: newX, y: newY } : r)
         }));
-    } else {
+    } else if (dragState.type === 'door') {
         updateStateWithoutHistory(prev => ({
             ...prev,
             doors: prev.doors.map(d => d.id === dragState.id ? { ...d, x: newX, y: newY } : d)
+        }));
+    } else if (dragState.type === 'furniture') {
+         updateStateWithoutHistory(prev => ({
+            ...prev,
+            furniture: prev.furniture.map(f => f.id === dragState.id ? { ...f, x: newX, y: newY } : f)
         }));
     }
   };
@@ -344,8 +359,10 @@ const FloorPlanApp = () => {
     if (!selection) return;
     if (selection.type === 'room') {
       setState(prev => ({ ...prev, rooms: prev.rooms.filter(r => r.id !== selection.id) }));
-    } else {
+    } else if (selection.type === 'door') {
       setState(prev => ({ ...prev, doors: prev.doors.filter(d => d.id !== selection.id) }));
+    } else if (selection.type === 'furniture') {
+      setState(prev => ({ ...prev, furniture: prev.furniture.filter(f => f.id !== selection.id) }));
     }
     setSelection(null);
   };
@@ -420,9 +437,10 @@ const FloorPlanApp = () => {
         const config = JSON.parse(event.target?.result as string);
         const newRooms = (config.rooms && Array.isArray(config.rooms)) ? config.rooms : rooms;
         const newDoors = (config.doors && Array.isArray(config.doors)) ? config.doors : doors;
+        const newFurniture = (config.furniture && Array.isArray(config.furniture)) ? config.furniture : furniture;
         
-        if (config.rooms || config.doors) {
-            setState({ rooms: newRooms, doors: newDoors });
+        if (config.rooms || config.doors || config.furniture) {
+            setState({ rooms: newRooms, doors: newDoors, furniture: newFurniture });
             setSelection(null);
         }
       } catch (error) {
@@ -474,21 +492,17 @@ const FloorPlanApp = () => {
       // Delete
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (selection) {
-          if (selection.type === 'room') {
-            setState(prev => ({ ...prev, rooms: prev.rooms.filter(r => r.id !== selection.id) }));
-          } else {
-            setState(prev => ({ ...prev, doors: prev.doors.filter(d => d.id !== selection.id) }));
-          }
-          setSelection(null);
+          deleteItem();
         }
       }
 
       // Copy
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         if (selection) {
-          const item = selection.type === 'room'
-            ? rooms.find(r => r.id === selection.id)
-            : doors.find(d => d.id === selection.id);
+          let item;
+          if (selection.type === 'room') item = rooms.find(r => r.id === selection.id);
+          else if (selection.type === 'door') item = doors.find(d => d.id === selection.id);
+          else if (selection.type === 'furniture') item = furniture.find(f => f.id === selection.id);
           
           if (item) {
             setClipboard({ type: selection.type, data: item });
@@ -522,6 +536,17 @@ const FloorPlanApp = () => {
             };
             setState(prev => ({ ...prev, doors: [...prev.doors, newDoor] }));
             setSelection({ type: 'door', id: newId });
+          } else if (clipboard.type === 'furniture') {
+             const furnitureData = clipboard.data as Furniture;
+             const newId = `furniture_${Date.now()}`;
+             const newFurniture = {
+                 ...furnitureData,
+                 id: newId,
+                 x: furnitureData.x + 2,
+                 y: furnitureData.y + 2
+             };
+             setState(prev => ({ ...prev, furniture: [...prev.furniture, newFurniture] }));
+             setSelection({ type: 'furniture', id: newId });
           }
         }
       }
@@ -546,6 +571,48 @@ const FloorPlanApp = () => {
   // Derived state for selected item
   const selectedRoom = selection?.type === 'room' ? rooms.find(r => r.id === selection.id) || null : null;
   const selectedDoor = selection?.type === 'door' ? doors.find(d => d.id === selection.id) || null : null;
+  const selectedFurniture = selection?.type === 'furniture' ? furniture.find(f => f.id === selection.id) || null : null;
+
+  const totalArea = rooms.reduce((acc, room) => acc + calculateArea(room.w, room.h), 0);
+
+  const addFurniture = (type: string) => {
+      const newId = `furniture_${Date.now()}`;
+      // Default dimensions based on type (approximate feet)
+      let width = 3;
+      let depth = 2;
+      if (type.includes('bed_queen')) { width = 5; depth = 6.5; }
+      else if (type.includes('bed_single')) { width = 3.5; depth = 6.5; }
+      else if (type.includes('sofa_3')) { width = 7; depth = 3; }
+      else if (type.includes('sofa_2')) { width = 5; depth = 3; }
+      else if (type.includes('table_dining')) { width = 6; depth = 3.5; }
+      else if (type.includes('table_round')) { width = 4; depth = 4; }
+      else if (type.includes('desk')) { width = 4; depth = 2; }
+      else if (type.includes('wardrobe')) { width = 4; depth = 2; }
+      else if (type.includes('tv_unit')) { width = 5; depth = 1.5; }
+      else if (type.includes('toilet')) { width = 1.5; depth = 2.5; }
+      else if (type.includes('sink')) { width = 2; depth = 1.5; }
+      else if (type.includes('shower')) { width = 3; depth = 3; }
+      else if (type.includes('plant')) { width = 1.5; depth = 1.5; }
+
+      const newFurniture: Furniture = {
+          id: newId,
+          type,
+          x: 50,
+          y: 50,
+          rotation: 0,
+          width,
+          depth
+      };
+      setState(prev => ({ ...prev, furniture: [...prev.furniture, newFurniture] }));
+      setSelection({ type: 'furniture', id: newId });
+  };
+
+  const updateFurniture = (id: string, field: keyof Furniture, value: any) => {
+      setState(prev => ({
+          ...prev,
+          furniture: prev.furniture.map(f => f.id === id ? { ...f, [field]: value } : f)
+      }));
+  };
 
   return (
     <div className="min-h-screen bg-[#e8dfce] p-4 font-serif text-[#3d3124] flex flex-col items-center select-none">
@@ -582,34 +649,43 @@ const FloorPlanApp = () => {
         onZoomOut={handleZoomOut}
         onResetView={handleResetView}
         scale={viewState.scale}
+        totalArea={totalArea}
+        appMode={appMode}
+        setAppMode={setAppMode}
       />
 
       <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 h-[80vh]">
         
-        <Canvas 
+        <Canvas
            containerRef={containerRef}
            rooms={rooms}
            doors={doors}
+           furniture={furniture}
            selection={selection}
            dragState={dragState}
            showDimensions={showDimensions}
            viewState={viewState}
+           appMode={appMode}
            onMouseDown={handleMouseDown}
            onSelectionClear={() => setSelection(null)}
            onUpdateRoomType={updateRoomType}
            onWheel={handleWheel}
         />
 
-        <Sidebar 
+        <Sidebar
+          appMode={appMode}
           selection={selection}
           selectedRoom={selectedRoom}
           selectedDoor={selectedDoor}
+          selectedFurniture={selectedFurniture}
           onDuplicateRoom={duplicateRoom}
           onDeleteItem={deleteItem}
           onUpdateRoom={updateRoom}
           onToggleWall={toggleWall}
           onUpdateDoor={updateDoor}
           onDuplicateRoomDirectional={duplicateRoomDirectional}
+          onAddFurniture={addFurniture}
+          onUpdateFurniture={updateFurniture}
         />
       </div>
     </div>

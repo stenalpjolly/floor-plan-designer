@@ -2,6 +2,7 @@ import React, { MouseEvent } from 'react';
 import { Move, AlertTriangle } from 'lucide-react';
 import { Room, Selection, DragState } from '@/types';
 import { validateRoom } from '@/utils/validation';
+import { calculateArea } from '@/utils/dimensions';
 
 interface RoomItemProps {
   room: Room;
@@ -41,8 +42,8 @@ const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDim
       onClick={(e) => e.stopPropagation()} 
       className={`absolute flex flex-col items-center justify-center text-center overflow-hidden transition-shadow group
         ${getRoomColor(room.type)}
-        ${selection?.id === room.id ? 'z-10 ring-4 ring-[#d4a373] shadow-2xl' : 'z-0 hover:z-10'}
-        ${!validation.isValid && selection?.id !== room.id ? 'ring-2 ring-red-500' : ''}
+        ${selection?.id === room.id ? 'z-10 shadow-[0_0_0_4px_#d4a373,0_25px_50px_-12px_rgba(0,0,0,0.25)]' : 'z-0 hover:z-10'}
+        ${!validation.isValid && selection?.id !== room.id ? 'shadow-[0_0_0_2px_#ef4444]' : ''}
         ${dragState?.id === room.id ? 'cursor-grabbing opacity-90' : 'cursor-grab'}
       `}
       style={{
@@ -72,9 +73,14 @@ const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDim
           {room.name}
         </span>
         {showDimensions && (
-          <span className="text-[0.5rem] md:text-[0.65rem] text-[#6b5d4d] mt-1 font-sans block opacity-80">
-            {room.dimensions}
-          </span>
+          <>
+            <span className="text-[0.5rem] md:text-[0.65rem] text-[#6b5d4d] mt-1 font-sans block opacity-80">
+              {room.dimensions}
+            </span>
+            <span className="text-[0.5rem] md:text-[0.65rem] text-[#6b5d4d] font-sans block opacity-60">
+              {calculateArea(room.w, room.h)} sq.ft
+            </span>
+          </>
         )}
       </div>
 
@@ -87,7 +93,7 @@ const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDim
 
       {/* Validation Warning */}
       {!validation.isValid && (
-        <div className="absolute top-1 right-1 text-red-600 bg-white/80 rounded-full p-0.5" title={validation.message}>
+        <div className="absolute top-1 right-1 text-[#dc2626] bg-white/80 rounded-full p-0.5" title={validation.message}>
           <AlertTriangle className="w-3 h-3" />
         </div>
       )}
