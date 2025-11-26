@@ -1,4 +1,19 @@
 import React, { MouseEvent, RefObject, useState } from 'react';
+import {
+  BedDouble,
+  BedSingle,
+  Utensils,
+  Sofa,
+  Bath,
+  Armchair,
+  Library,
+  WashingMachine,
+  Trees,
+  Briefcase,
+  Car,
+  Warehouse,
+  DoorOpen
+} from 'lucide-react';
 import { Room, Door, Selection, DragState } from '@/types';
 import RoomItem from './RoomItem';
 import DoorItem from './DoorItem';
@@ -17,15 +32,19 @@ interface CanvasProps {
 }
 
 const ROOM_TYPES = [
-  { label: 'Master Bedroom', value: 'bedroom' },
-  { label: 'Single Bedroom', value: 'bedroom' },
-  { label: 'Kitchen', value: 'kitchen' },
-  { label: 'Living Room', value: 'living' },
-  { label: 'Bathroom', value: 'bathroom' },
-  { label: 'Dining Room', value: 'dining' },
-  { label: 'Study Room', value: 'study' },
-  { label: 'Utility Room', value: 'utility' },
-  { label: 'Outdoor/Balcony', value: 'outdoor' },
+  { label: 'Master Bedroom', value: 'master_bedroom', icon: <BedDouble className="w-4 h-4" /> },
+  { label: 'Bedroom', value: 'bedroom', icon: <BedSingle className="w-4 h-4" /> },
+  { label: 'Kitchen', value: 'kitchen', icon: <Utensils className="w-4 h-4" /> },
+  { label: 'Living Room', value: 'living', icon: <Sofa className="w-4 h-4" /> },
+  { label: 'Dining Room', value: 'dining', icon: <Utensils className="w-4 h-4" /> },
+  { label: 'Bathroom', value: 'bathroom', icon: <Bath className="w-4 h-4" /> },
+  { label: 'Study / Office', value: 'study', icon: <Library className="w-4 h-4" /> },
+  { label: 'Laundry / Utility', value: 'utility', icon: <WashingMachine className="w-4 h-4" /> },
+  { label: 'Garage', value: 'garage', icon: <Car className="w-4 h-4" /> },
+  { label: 'Balcony / Patio', value: 'outdoor', icon: <Trees className="w-4 h-4" /> },
+  { label: 'Corridor / Hall', value: 'corridor', icon: <DoorOpen className="w-4 h-4" /> },
+  { label: 'Storage', value: 'storage', icon: <Warehouse className="w-4 h-4" /> },
+  { label: 'Entrance', value: 'entrance', icon: <DoorOpen className="w-4 h-4" /> },
 ];
 
 const Canvas: React.FC<CanvasProps> = ({
@@ -91,6 +110,7 @@ const Canvas: React.FC<CanvasProps> = ({
             onClose={() => setContextMenu(null)}
             options={ROOM_TYPES.map(type => ({
               label: type.label,
+              icon: type.icon,
               action: () => onUpdateRoomType(contextMenu.roomId, type.value, type.label)
             }))}
           />

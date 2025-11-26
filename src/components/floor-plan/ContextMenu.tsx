@@ -4,7 +4,7 @@ interface ContextMenuProps {
   x: number;
   y: number;
   onClose: () => void;
-  options: { label: string; action: () => void }[];
+  options: { label: string; icon?: React.ReactNode; action: () => void }[];
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, options }) => {
@@ -32,12 +32,13 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, options }) => 
       {options.map((option, index) => (
         <button
           key={index}
-          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors flex items-center gap-2"
           onClick={() => {
             option.action();
             onClose();
           }}
         >
+          {option.icon && <span className="text-gray-500 w-4 h-4 flex items-center justify-center">{option.icon}</span>}
           {option.label}
         </button>
       ))}

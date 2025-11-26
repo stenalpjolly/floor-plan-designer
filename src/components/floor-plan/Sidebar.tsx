@@ -133,6 +133,20 @@ const Sidebar: React.FC<SidebarProps> = ({
                 
                 <div className="space-y-4">
                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Door Type</label>
+                      <select
+                         value={selectedDoor.type}
+                         onChange={(e) => onUpdateDoor(selectedDoor.id, 'type', e.target.value)}
+                         className="w-full bg-white border border-[#d4c5a9] p-2 rounded text-[#4a3b2a] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#5c4d3c]"
+                      >
+                         <option value="standard">Standard Hinged</option>
+                         <option value="double">Double Door</option>
+                         <option value="sliding">Sliding Door</option>
+                         <option value="open">Open / Archway</option>
+                      </select>
+                   </div>
+ 
+                   <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Orientation</label>
                       <div className="flex gap-2">
                         <button
@@ -145,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         >Vertical</button>
                       </div>
                    </div>
-
+ 
                    <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Swing Direction</label>
                       <div className="flex gap-2">

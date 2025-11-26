@@ -13,11 +13,19 @@ interface RoomItemProps {
 
 const getRoomColor = (type: string) => {
   switch (type) {
+    case 'master_bedroom': return 'bg-[#e8dcca] hover:bg-[#decbb5]';
     case 'bedroom': return 'bg-[#f0e6d2] hover:bg-[#e6dcc8]';
+    case 'kitchen': return 'bg-[#fff0f0] hover:bg-[#ffe0e0]';
+    case 'dining': return 'bg-[#fff8e0] hover:bg-[#ffeecc]';
     case 'bathroom': return 'bg-[#e0eff1] hover:bg-[#d0eef1]';
     case 'living': return 'bg-[#fdf6e9] hover:bg-[#fcf0dc]';
+    case 'study': return 'bg-[#f2f0e6] hover:bg-[#e6e2d1]';
     case 'utility': return 'bg-[#ebebeb] hover:bg-[#dddddd]';
+    case 'garage': return 'bg-[#e0e0e0] hover:bg-[#d1d1d1]';
     case 'outdoor': return 'bg-[#e8f5e9] hover:bg-[#dceddd]';
+    case 'corridor': return 'bg-[#f9f9f9] hover:bg-[#f0f0f0]';
+    case 'storage': return 'bg-[#e8e4dd] hover:bg-[#ded9cf]';
+    case 'entrance': return 'bg-[#f5f5dc] hover:bg-[#ebebc2]';
     default: return 'bg-white hover:bg-gray-50';
   }
 };

@@ -31,7 +31,8 @@ const FloorPlanApp = () => {
         dimensions: calculateDimensions(room.w, room.h)
       }));
       setRooms(sanitizedRooms);
-      setDoors(plan.doors);
+      // Ensure generated doors have a type property
+      setDoors(plan.doors.map(door => ({ ...door, type: 'standard' })));
       setIsPromptModalOpen(false);
     } catch (error) {
       console.error("Failed to generate floor plan:", error);
@@ -156,7 +157,8 @@ const FloorPlanApp = () => {
       id: newId,
       x: 50, y: 50,
       orientation: 'horizontal',
-      swing: 'left'
+      swing: 'left',
+      type: 'standard'
     };
     setDoors([...doors, newDoor]);
     setSelection({ type: 'door', id: newId });

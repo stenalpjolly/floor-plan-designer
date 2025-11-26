@@ -22,6 +22,7 @@ export interface Door {
   y: number;
   orientation: 'horizontal' | 'vertical';
   swing: 'left' | 'right';
+  type: 'standard' | 'sliding' | 'double' | 'open';
 }
 
 export interface Selection {
