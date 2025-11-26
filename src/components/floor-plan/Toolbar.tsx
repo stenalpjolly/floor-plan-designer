@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useRef } from 'react';
-import { Home, Download, Upload, DoorOpen, Plus, Ruler, Undo, Redo } from 'lucide-react';
+import { Home, Download, Upload, DoorOpen, Plus, Ruler, Undo, Redo, Box, Image as ImageIcon } from 'lucide-react';
 
 interface ToolbarProps {
   showDimensions: boolean;
@@ -12,6 +12,8 @@ interface ToolbarProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  onGenerate3D: () => void;
+  onDownloadImage: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -25,6 +27,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onRedo,
   canUndo,
   canRedo,
+  onGenerate3D,
+  onDownloadImage,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,6 +77,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
           <div className="flex gap-2 mr-2 pr-2 border-r border-[#d4c5a9]">
              <button
+                onClick={onDownloadImage}
+                className="flex items-center gap-1 px-3 py-2 text-xs bg-white text-[#5c4d3c] border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors"
+                title="Download as Image"
+             >
+               <ImageIcon className="w-3 h-3" /> Image
+             </button>
+             <button
                 onClick={onExport}
                 className="flex items-center gap-1 px-3 py-2 text-xs bg-white text-[#5c4d3c] border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors"
                 title="Save Layout to JSON"
@@ -87,6 +98,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
                <Upload className="w-3 h-3" /> Import
              </button>
           </div>
+
+          <button
+            onClick={onGenerate3D}
+            className="flex items-center gap-2 px-3 py-2 bg-[#5c4d3c] text-[#f4ece0] border border-[#5c4d3c] rounded shadow-sm hover:bg-[#4a3b2a] transition-colors font-bold"
+            title="Generate 3D Isometric View"
+          >
+            <Box className="w-4 h-4" /> 3D View
+          </button>
 
           <button
             onClick={onAddDoor}

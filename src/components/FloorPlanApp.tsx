@@ -7,7 +7,11 @@ import Toolbar from './floor-plan/Toolbar';
 import Canvas from './floor-plan/Canvas';
 import Sidebar from './floor-plan/Sidebar';
 import PromptModal from './floor-plan/PromptModal';
+import ThreeDModal from './floor-plan/ThreeDModal';
+import html2canvas from 'html2canvas';
 import { generateFloorPlan } from '@/app/actions/generate-plan';
+import { generate3DView } from '@/app/actions/generate-3d-view';
+import { buildFloorPlanPrompt } from '@/utils/prompt-builder';
 import { calculateDimensions } from '@/utils/dimensions';
 
 const FloorPlanApp = () => {
@@ -17,6 +21,12 @@ const FloorPlanApp = () => {
   const [dragState, setDragState] = useState<DragState | null>(null); // { type, id, startX, startY, initialX, initialY }
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(true);
+  
+  // 3D Generation State
+  const [is3DModalOpen, setIs3DModalOpen] = useState(false);
+  const [isGenerating3D, setIsGenerating3D] = useState(false);
+  const [generated3DImage, setGenerated3DImage] = useState<string | null>(null);
+  const [generationError3D, setGenerationError3D] = useState<string | null>(null);
 
   const {
     state: floorPlan,
@@ -54,6 +64,44 @@ const FloorPlanApp = () => {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleGenerate3D = async () => {
+      setIs3DModalOpen(true);
+      setIsGenerating3D(true);
+      setGenerated3DImage(null);
+      setGenerationError3D(null);
+
+      try {
+          let imageBase64 = undefined;
+          
+          // Capture Canvas Screenshot
+          if (containerRef.current) {
+            try {
+                const canvas = await html2canvas(containerRef.current, {
+                    backgroundColor: '#e8dfce', // Match background
+                    scale: 1, // Don't make it too huge
+                });
+                imageBase64 = canvas.toDataURL('image/png').split(',')[1];
+            } catch (e) {
+                console.warn("Failed to capture canvas screenshot:", e);
+            }
+          }
+
+          const contextPrompt = buildFloorPlanPrompt(rooms, doors);
+          // Pass both text context AND image (although backend currently prioritizes text for Imagen 3)
+          const result = await generate3DView(contextPrompt, imageBase64);
+          
+          if (result.image) {
+              setGenerated3DImage(result.image);
+          } else if (result.error) {
+              setGenerationError3D(result.error);
+          }
+      } catch (err) {
+          setGenerationError3D("An unexpected error occurred.");
+      } finally {
+          setIsGenerating3D(false);
+      }
   };
 
   // --- Dragging Logic ---
@@ -309,6 +357,24 @@ const FloorPlanApp = () => {
     e.target.value = '';
   };
 
+  const handleDownloadImage = async () => {
+    if (containerRef.current) {
+      try {
+        const canvas = await html2canvas(containerRef.current, {
+            backgroundColor: '#e8dfce',
+            scale: 2, // Higher resolution for download
+        });
+        const link = document.createElement('a');
+        link.download = `floor-plan-${Date.now()}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+      } catch (e) {
+          console.error("Failed to download image:", e);
+          alert("Failed to generate image. Please try again.");
+      }
+    }
+  };
+
   // Global mouse up
   useEffect(() => {
     if (dragState) {
@@ -413,11 +479,21 @@ const FloorPlanApp = () => {
         isLoading={isGenerating}
       />
 
+      <ThreeDModal
+        isOpen={is3DModalOpen}
+        isLoading={isGenerating3D}
+        imageUrl={generated3DImage}
+        error={generationError3D}
+        onClose={() => setIs3DModalOpen(false)}
+      />
+
       <Toolbar
         showDimensions={showDimensions}
         setShowDimensions={setShowDimensions}
         onExport={downloadConfig}
         onImport={handleUpload}
+        onGenerate3D={handleGenerate3D}
+        onDownloadImage={handleDownloadImage}
         onAddDoor={addDoor}
         onAddRoom={addRoom}
         onUndo={undo}
