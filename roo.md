@@ -92,20 +92,16 @@ The migration to Next.js encourages a component-based architecture to improve ma
     *   Handles "Intelligent Snapping" logic during move operations.
 
 ### Component Decomposition Strategy
-While a V1 port could remain monolithic within `FloorPlanApp.tsx`, it is **strongly recommended** to extract smaller functional components to separate concerns:
+The application is refactored from a monolithic file into a modular structure to separate concerns and improve maintainability:
 
-1.  **`Canvas.tsx`**: The main droppable area rendering grid lines.
-2.  **`Room.tsx`**: 
-    *   Renders a single room based on `Room` props.
-    *   Handles its own resize handles.
-    *   Visualizes the "borders" (walls).
-3.  **`Door.tsx`**: 
-    *   Renders the door icon/shape.
-    *   Visualizes swing and orientation.
-4.  **`Toolbar.tsx`** / **`Controls.tsx`**: 
-    *   UI for adding new rooms/doors.
-    *   UI for editing properties of the *selected* item (Name, Dimensions, Wall Toggles).
-    *   Save/Load buttons.
+1.  **`src/types/index.ts`**: Shared type definitions (`Room`, `Door`, `Selection`, `DragState`).
+2.  **`src/components/floor-plan/`**: Directory containing sub-components.
+    *   **`Toolbar.tsx`**: Header controls for file operations (Export/Import), adding items (Room/Door), and toggles (Dimensions).
+    *   **`Canvas.tsx`**: The main workspace handling the grid background and rendering the list of rooms and doors.
+    *   **`Sidebar.tsx`**: The property editor for modifying the selected room or door details.
+    *   **`RoomItem.tsx`**: Renders a single room, handles visual states (hover, selection, drag), and wall borders.
+    *   **`DoorItem.tsx`**: Renders a single door with architectural symbols for orientation and swing.
+3.  **`src/components/FloorPlanApp.tsx`**: The container component that manages the global state (`rooms`, `doors`, `selection`, `dragState`) and orchestrates event handling.
 
 ### State Management Flow
 *   **Central Store**: Use React `useState` (or a reducer) inside `FloorPlanApp` to hold the array of Rooms and Doors.
