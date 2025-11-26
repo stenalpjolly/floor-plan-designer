@@ -23,6 +23,7 @@ export interface Door {
   orientation: 'horizontal' | 'vertical';
   swing: 'left' | 'right';
   type: 'standard' | 'sliding' | 'double' | 'open';
+  width?: number; // Width in feet
 }
 
 export interface Selection {

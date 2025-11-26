@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useRef } from 'react';
-import { Home, Download, Upload, DoorOpen, Plus, Ruler } from 'lucide-react';
+import { Home, Download, Upload, DoorOpen, Plus, Ruler, Undo, Redo } from 'lucide-react';
 
 interface ToolbarProps {
   showDimensions: boolean;
@@ -8,6 +8,10 @@ interface ToolbarProps {
   onImport: (e: ChangeEvent<HTMLInputElement>) => void;
   onAddDoor: () => void;
   onAddRoom: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -17,6 +21,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onImport,
   onAddDoor,
   onAddRoom,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,14 +53,33 @@ const Toolbar: React.FC<ToolbarProps> = ({
         {/* Top Controls */}
         <div className="flex flex-wrap gap-2 justify-center md:justify-end">
           <div className="flex gap-2 mr-2 pr-2 border-r border-[#d4c5a9]">
-             <button 
+            <button
+              onClick={onUndo}
+              disabled={!canUndo}
+              className="p-2 text-[#5c4d3c] hover:bg-[#d4c5a9] disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+              title="Undo"
+            >
+              <Undo className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onRedo}
+              disabled={!canRedo}
+              className="p-2 text-[#5c4d3c] hover:bg-[#d4c5a9] disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+              title="Redo"
+            >
+              <Redo className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex gap-2 mr-2 pr-2 border-r border-[#d4c5a9]">
+             <button
                 onClick={onExport}
                 className="flex items-center gap-1 px-3 py-2 text-xs bg-white text-[#5c4d3c] border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors"
                 title="Save Layout to JSON"
              >
                <Download className="w-3 h-3" /> Export
              </button>
-             <button 
+             <button
                 onClick={triggerUpload}
                 className="flex items-center gap-1 px-3 py-2 text-xs bg-white text-[#5c4d3c] border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors"
                 title="Load Layout from JSON"
@@ -61,7 +88,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
              </button>
           </div>
 
-          <button 
+          <button
             onClick={onAddDoor}
             className="flex items-center gap-2 px-3 py-2 bg-white text-[#5c4d3c] border border-[#5c4d3c] rounded shadow-sm hover:bg-[#f9f5eb] transition-colors"
           >

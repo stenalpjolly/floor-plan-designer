@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Trash2, MousePointer2 } from 'lucide-react';
+import { Copy, Trash2, MousePointer2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RotateCcw, Layout, Grid, Plus, Minus } from 'lucide-react';
 import { Room, Door, Selection } from '@/types';
 
 interface SidebarProps {
@@ -7,22 +7,72 @@ interface SidebarProps {
   selectedRoom: Room | null;
   selectedDoor: Door | null;
   onDuplicateRoom: (roomId: string) => void;
+  onDuplicateRoomDirectional: (roomId: string, direction: 'top' | 'bottom' | 'left' | 'right') => void;
   onDeleteItem: () => void;
   onUpdateRoom: (id: string, field: keyof Room, value: any) => void;
   onToggleWall: (roomId: string, wall: keyof Room['borders']) => void;
   onUpdateDoor: (id: string, field: keyof Door, value: any) => void;
 }
 
+// Preset Definitions for "Smart Types"
+const ROOM_PRESETS = {
+    master_bedroom: { label: 'Master Bed', w: 18, h: 16, color: '#e8dcca' },
+    bedroom: { label: 'Bedroom', w: 14, h: 14, color: '#f0e6d2' },
+    kitchen: { label: 'Kitchen', w: 14, h: 12, color: '#fff0f0' },
+    dining: { label: 'Dining', w: 14, h: 12, color: '#fff8e0' },
+    living: { label: 'Living', w: 20, h: 18, color: '#fdf6e9' },
+    bathroom: { label: 'Bath', w: 8, h: 10, color: '#e0eff1' },
+    corridor: { label: 'Corridor', w: 25, h: 6, color: '#f9f9f9' },
+    garage: { label: 'Garage', w: 20, h: 20, color: '#e0e0e0' },
+};
+
 const Sidebar: React.FC<SidebarProps> = ({
   selection,
   selectedRoom,
   selectedDoor,
   onDuplicateRoom,
+  onDuplicateRoomDirectional,
   onDeleteItem,
   onUpdateRoom,
   onToggleWall,
   onUpdateDoor
 }) => {
+  
+  const handleApplyPreset = (type: string) => {
+      if (!selectedRoom) return;
+      // @ts-ignore
+      const preset = ROOM_PRESETS[type];
+      if (preset) {
+          onUpdateRoom(selectedRoom.id, 'type', type);
+          // Update name to match preset if it hasn't been custom renamed (or just always update it for speed)
+          onUpdateRoom(selectedRoom.id, 'name', preset.label);
+          // We do separate updates, or the parent could handle a bulk update.
+          // Ideally we'd add a bulk update method, but calling twice is okay for now.
+          onUpdateRoom(selectedRoom.id, 'w', preset.w);
+          onUpdateRoom(selectedRoom.id, 'h', preset.h);
+      }
+  };
+
+  const handleFlip = () => {
+      if (!selectedRoom) return;
+      const currentW = selectedRoom.w;
+      const currentH = selectedRoom.h;
+      onUpdateRoom(selectedRoom.id, 'w', currentH);
+      onUpdateRoom(selectedRoom.id, 'h', currentW);
+  };
+
+  const setWallPreset = (mode: 'open' | 'closed') => {
+      if (!selectedRoom) return;
+      const isVisible = mode === 'closed';
+      (['top', 'bottom', 'left', 'right'] as const).forEach(wall => {
+           // If current state is different, toggle it.
+           // Note: This is a bit hacky because `onToggleWall` toggles.
+           // A better `setWall` method would be cleaner, but we work with what we have.
+           if (selectedRoom.borders[wall] !== isVisible) {
+               onToggleWall(selectedRoom.id, wall);
+           }
+      });
+  };
   return (
     <div className="w-full lg:w-80 flex-shrink-0 bg-[#f4ece0] border-l-4 border-[#d4c5a9] lg:border-l-0 lg:border border-[#d4c5a9] shadow-xl flex flex-col">
       <div className="p-4 bg-[#5c4d3c] text-[#f4ece0] flex justify-between items-center">
@@ -54,73 +104,162 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-grow p-6 overflow-y-auto">
         {selectedRoom && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right duration-200">
+            {/* --- 1. SMART ACTIONS (Clone & Flip) --- */}
+            <div className="bg-[#e8dfce] p-3 rounded border border-[#d4c5a9]">
+               <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-2 flex items-center gap-1">
+                   <Layout className="w-3 h-3"/> Rapid Layout
+               </label>
+               <div className="flex gap-2 justify-center mb-2">
+                    <button
+                        onClick={() => onDuplicateRoomDirectional(selectedRoom.id, 'top')}
+                        className="p-2 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors" title="Clone Top"
+                    ><ArrowUp className="w-4 h-4"/></button>
+               </div>
+               <div className="flex gap-2 justify-center mb-2">
+                    <button
+                         onClick={() => onDuplicateRoomDirectional(selectedRoom.id, 'left')}
+                         className="p-2 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors" title="Clone Left"
+                    ><ArrowLeft className="w-4 h-4"/></button>
+                    
+                    <div className="w-8 h-8 flex items-center justify-center font-bold text-[#5c4d3c] bg-[#d4c5a9]/30 rounded-full text-xs">
+                        ROOM
+                    </div>
+
+                    <button
+                         onClick={() => onDuplicateRoomDirectional(selectedRoom.id, 'right')}
+                         className="p-2 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors" title="Clone Right"
+                    ><ArrowRight className="w-4 h-4"/></button>
+               </div>
+               <div className="flex gap-2 justify-center">
+                    <button
+                         onClick={() => onDuplicateRoomDirectional(selectedRoom.id, 'bottom')}
+                         className="p-2 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors" title="Clone Bottom"
+                    ><ArrowDown className="w-4 h-4"/></button>
+               </div>
+               
+               <div className="mt-3 pt-3 border-t border-[#d4c5a9]/50 flex gap-2">
+                   <button
+                      onClick={handleFlip}
+                      className="flex-1 py-1 bg-white border border-[#d4c5a9] rounded text-xs font-bold text-[#5c4d3c] flex items-center justify-center gap-1 hover:bg-[#fcf0dc]"
+                   >
+                       <RotateCcw className="w-3 h-3"/> Rotate 90°
+                   </button>
+               </div>
+            </div>
+
+            {/* --- 2. ROOM TYPE PRESETS --- */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-1 flex items-center gap-1">
+                  <Grid className="w-3 h-3"/> Smart Presets
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(ROOM_PRESETS).map(([key, preset]) => (
+                      <button
+                          key={key}
+                          onClick={() => handleApplyPreset(key)}
+                          className={`text-xs py-2 px-1 rounded border transition-all text-center truncate ${
+                              selectedRoom.type === key
+                              ? 'bg-[#5c4d3c] text-white border-[#5c4d3c] shadow-inner'
+                              : 'bg-white text-[#4a3b2a] border-[#d4c5a9] hover:bg-[#fcf0dc]'
+                          }`}
+                          style={{ borderLeftWidth: selectedRoom.type === key ? '4px' : '1px', borderLeftColor: preset.color }}
+                      >
+                          {preset.label}
+                      </button>
+                  ))}
+              </div>
+            </div>
+
             {/* Name Edit */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-1">Room Name</label>
-              <input 
-                type="text" 
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-1">Custom Name</label>
+              <input
+                type="text"
                 value={selectedRoom.name}
                 onChange={(e) => onUpdateRoom(selectedRoom.id, 'name', e.target.value)}
                 className="w-full bg-white border border-[#d4c5a9] p-2 rounded text-[#4a3b2a] font-bold focus:outline-none focus:ring-2 focus:ring-[#5c4d3c]"
               />
             </div>
 
-            {/* Wall Visibility Toggles */}
-            <div className="bg-white/50 p-3 rounded border border-[#d4c5a9]">
-               <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Wall Visibility</label>
-               <div className="grid grid-cols-2 gap-2">
-                  {(['top', 'bottom', 'left', 'right'] as const).map(wall => (
-                    <button
-                      key={wall}
-                      onClick={() => onToggleWall(selectedRoom.id, wall)}
-                      className={`text-xs px-2 py-1 rounded border capitalize transition-all ${
-                        selectedRoom.borders[wall] 
-                          ? 'bg-[#5c4d3c] text-white border-[#5c4d3c]' 
-                          : 'bg-transparent text-[#8c7b66] border-[#d4c5a9] hover:bg-white'
-                      }`}
-                    >
-                      {wall} {selectedRoom.borders[wall] ? 'Visible' : 'Hidden'}
-                    </button>
-                  ))}
-               </div>
-            </div>
-
-            {/* Dimensions Text */}
+            {/* Dimensions Text & Quick Size */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-1">Dimensions (Calculated)</label>
-              <input
-                type="text"
-                value={selectedRoom.dimensions}
-                readOnly
-                className="w-full bg-[#f4ece0] border border-[#d4c5a9] p-2 rounded text-[#4a3b2a] font-mono text-sm focus:outline-none cursor-not-allowed opacity-75"
-              />
+              <div className="flex gap-2 mb-2">
+                   <input
+                        type="text"
+                        value={selectedRoom.dimensions}
+                        readOnly
+                        className="flex-grow bg-[#f4ece0] border border-[#d4c5a9] p-2 rounded text-[#4a3b2a] font-mono text-sm focus:outline-none cursor-not-allowed opacity-75"
+                    />
+              </div>
+              <div className="flex gap-1">
+                   {[8, 12, 16, 20].map(size => (
+                       <button
+                           key={size}
+                           onClick={() => {
+                               onUpdateRoom(selectedRoom.id, 'w', size);
+                               onUpdateRoom(selectedRoom.id, 'h', size);
+                           }}
+                           className="flex-1 py-1 bg-white border border-[#d4c5a9] rounded text-[10px] font-bold text-[#8c7b66] hover:bg-[#5c4d3c] hover:text-white"
+                       >
+                           {size}x{size}
+                       </button>
+                   ))}
+              </div>
             </div>
 
             {/* Size Sliders */}
-            <div className="space-y-4 pt-4 border-t border-[#d4c5a9]">
+            <div className="space-y-3 pt-3 border-t border-[#d4c5a9]">
                <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="font-bold text-[#8c7b66]">WIDTH (%)</span>
+                  <span className="font-bold text-[#8c7b66]">WIDTH</span>
                   <span className="text-[#4a3b2a]">{selectedRoom.w}%</span>
                 </div>
-                <input 
-                  type="range" min="4" max="50" 
-                  value={selectedRoom.w} 
+                <input
+                  type="range" min="4" max="50"
+                  value={selectedRoom.w}
                   onChange={(e) => onUpdateRoom(selectedRoom.id, 'w', parseInt(e.target.value))}
                   className="w-full accent-[#5c4d3c]"
                 />
                </div>
                <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="font-bold text-[#8c7b66]">HEIGHT (%)</span>
+                  <span className="font-bold text-[#8c7b66]">HEIGHT</span>
                   <span className="text-[#4a3b2a]">{selectedRoom.h}%</span>
                 </div>
-                <input 
-                  type="range" min="4" max="50" 
-                  value={selectedRoom.h} 
+                <input
+                  type="range" min="4" max="50"
+                  value={selectedRoom.h}
                   onChange={(e) => onUpdateRoom(selectedRoom.id, 'h', parseInt(e.target.value))}
                   className="w-full accent-[#5c4d3c]"
                 />
+               </div>
+            </div>
+
+            {/* Wall Visibility Toggles */}
+            <div className="bg-white/50 p-3 rounded border border-[#d4c5a9]">
+               <div className="flex justify-between items-center mb-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66]">Wall Visibility</label>
+                    <div className="flex gap-1">
+                         <button onClick={() => setWallPreset('open')} className="text-[10px] px-1 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white" title="Open All">OPEN</button>
+                         <button onClick={() => setWallPreset('closed')} className="text-[10px] px-1 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white" title="Close All">BOX</button>
+                    </div>
+               </div>
+               
+               <div className="grid grid-cols-2 gap-2">
+                  {(['top', 'bottom', 'left', 'right'] as const).map(wall => (
+                    <button
+                      key={wall}
+                      onClick={() => onToggleWall(selectedRoom.id, wall)}
+                      className={`text-xs px-2 py-1 rounded border capitalize transition-all ${
+                        selectedRoom.borders[wall]
+                          ? 'bg-[#5c4d3c] text-white border-[#5c4d3c]'
+                          : 'bg-transparent text-[#8c7b66] border-[#d4c5a9] hover:bg-white'
+                      }`}
+                    >
+                      {wall}
+                    </button>
+                  ))}
                </div>
             </div>
           </div>
@@ -171,6 +310,35 @@ const Sidebar: React.FC<SidebarProps> = ({
                            onClick={() => onUpdateDoor(selectedDoor.id, 'swing', 'right')}
                            className={`flex-1 py-2 text-xs rounded border ${selectedDoor.swing === 'right' ? 'bg-[#5c4d3c] text-white' : 'bg-white text-[#5c4d3c]'}`}
                         >Reverse</button>
+                      </div>
+                   </div>
+
+                   <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Width (ft)</label>
+                      <div className="flex items-center gap-2 bg-white border border-[#d4c5a9] rounded p-1">
+                          <button
+                              onClick={() => {
+                                  const currentWidth = selectedDoor.width ?? (selectedDoor.type === 'double' ? 6 : 3);
+                                  onUpdateDoor(selectedDoor.id, 'width', Math.max(1, currentWidth - 0.5));
+                              }}
+                              className="p-1 hover:bg-[#f4ece0] rounded text-[#5c4d3c]"
+                              title="Decrease Width"
+                          >
+                              <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="flex-1 text-center font-bold text-[#4a3b2a] text-sm">
+                              {selectedDoor.width ?? (selectedDoor.type === 'double' ? 6 : 3)} ft
+                          </span>
+                          <button
+                              onClick={() => {
+                                  const currentWidth = selectedDoor.width ?? (selectedDoor.type === 'double' ? 6 : 3);
+                                  onUpdateDoor(selectedDoor.id, 'width', Math.min(12, currentWidth + 0.5));
+                              }}
+                              className="p-1 hover:bg-[#f4ece0] rounded text-[#5c4d3c]"
+                              title="Increase Width"
+                          >
+                              <Plus className="w-4 h-4" />
+                          </button>
                       </div>
                    </div>
                 </div>
