@@ -131,3 +131,25 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+## 🚀 Deployment
+
+### GitHub Pages (Static Demo)
+This application is configured to deploy automatically to **GitHub Pages**.
+- The site is built as a static export.
+- **Note:** AI features (Plan Generation, 3D View) are **disabled** on the GitHub Pages demo because they require server-side execution (Next.js Server Actions).
+
+**To enable GitHub Pages for your fork:**
+1. Go to your repository **Settings**.
+2. Navigate to **Pages** (under Code and automation).
+3. Under **Build and deployment** > **Source**, select **GitHub Actions**.
+4. The deployment workflow (`.github/workflows/deploy.yml`) will automatically trigger on your next push to `main`.
+
+### Full Deployment (with AI Features)
+To deploy the full version with AI capabilities, use a platform that supports Next.js Server Actions, such as **Vercel** or **Google Cloud Run**.
+
+**Vercel:**
+1. Push your code to GitHub.
+2. Import the project in Vercel.
+3. Add your `GOOGLE_APPLICATION_CREDENTIALS` (as a base64 encoded string or JSON) to the Environment Variables.
+4. Set `NEXT_PUBLIC_ENABLE_AI` to `true`.

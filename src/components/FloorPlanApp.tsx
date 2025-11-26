@@ -47,6 +47,11 @@ const FloorPlanApp = () => {
   const [clipboard, setClipboard] = useState<{ type: 'room' | 'door' | 'furniture', data: Room | Door | Furniture } | null>(null);
 
   const handleGeneratePlan = async (prompt: string) => {
+    if (process.env.NEXT_PUBLIC_ENABLE_AI !== 'true') {
+      alert("AI features are disabled in this static demo. To use AI generation, please clone the repository and run it locally or deploy to a platform supporting Next.js Server Actions (like Vercel or Cloud Run).");
+      return;
+    }
+
     try {
       setIsGenerating(true);
       const plan = await generateFloorPlan(prompt);
@@ -72,6 +77,11 @@ const FloorPlanApp = () => {
   };
 
   const handleGenerate3D = async () => {
+      if (process.env.NEXT_PUBLIC_ENABLE_AI !== 'true') {
+        alert("AI features are disabled in this static demo. To use AI generation, please clone the repository and run it locally or deploy to a platform supporting Next.js Server Actions (like Vercel or Cloud Run).");
+        return;
+      }
+
       setIs3DModalOpen(true);
       setIsGenerating3D(true);
       setGenerated3DImage(null);
