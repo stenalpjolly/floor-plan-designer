@@ -1,7 +1,8 @@
-import React, { MouseEvent, RefObject } from 'react';
+import React, { MouseEvent, RefObject, useState } from 'react';
 import { Room, Door, Selection, DragState } from '@/types';
 import RoomItem from './RoomItem';
 import DoorItem from './DoorItem';
+import ContextMenu from './ContextMenu';
 
 interface CanvasProps {
   containerRef: RefObject<HTMLDivElement | null>;
@@ -12,7 +13,20 @@ interface CanvasProps {
   showDimensions: boolean;
   onMouseDown: (e: MouseEvent, type: 'room' | 'door', id: string) => void;
   onSelectionClear: () => void;
+  onUpdateRoomType: (roomId: string, type: string, name: string) => void;
 }
+
+const ROOM_TYPES = [
+  { label: 'Master Bedroom', value: 'bedroom' },
+  { label: 'Single Bedroom', value: 'bedroom' },
+  { label: 'Kitchen', value: 'kitchen' },
+  { label: 'Living Room', value: 'living' },
+  { label: 'Bathroom', value: 'bathroom' },
+  { label: 'Dining Room', value: 'dining' },
+  { label: 'Study Room', value: 'study' },
+  { label: 'Utility Room', value: 'utility' },
+  { label: 'Outdoor/Balcony', value: 'outdoor' },
+];
 
 const Canvas: React.FC<CanvasProps> = ({
   containerRef,
@@ -22,8 +36,23 @@ const Canvas: React.FC<CanvasProps> = ({
   dragState,
   showDimensions,
   onMouseDown,
-  onSelectionClear
+  onSelectionClear,
+  onUpdateRoomType
 }) => {
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; roomId: string } | null>(null);
+
+  const handleRoomContextMenu = (e: MouseEvent, roomId: string) => {
+    e.preventDefault();
+    if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setContextMenu({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+            roomId
+        });
+    }
+  };
+
   return (
     <div
       className="flex-grow relative bg-[#f9f5eb] rounded shadow-inner border-[6px] border-[#5c4d3c] overflow-hidden cursor-crosshair"
@@ -51,8 +80,21 @@ const Canvas: React.FC<CanvasProps> = ({
             dragState={dragState}
             showDimensions={showDimensions}
             onMouseDown={onMouseDown}
+            onContextMenu={handleRoomContextMenu}
           />
         ))}
+
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={() => setContextMenu(null)}
+            options={ROOM_TYPES.map(type => ({
+              label: type.label,
+              action: () => onUpdateRoomType(contextMenu.roomId, type.value, type.label)
+            }))}
+          />
+        )}
 
         {/* Doors */}
         {doors.map((door) => (
@@ -64,11 +106,6 @@ const Canvas: React.FC<CanvasProps> = ({
           />
         ))}
         
-        {/* Courtyard Visual Helper */}
-        <div className="absolute top-[38%] left-[43%] text-[#4a3b2a] opacity-10 font-bold text-4xl pointer-events-none z-0 rotate-45">
-           COURTYARD
-        </div>
-
     </div>
   );
 };

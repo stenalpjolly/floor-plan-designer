@@ -15,9 +15,11 @@ const FloorPlanApp = () => {
   const [showDimensions, setShowDimensions] = useState(true);
   const [dragState, setDragState] = useState<DragState | null>(null); // { type, id, startX, startY, initialX, initialY }
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(true);
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [doors, setDoors] = useState<Door[]>([]);
+  const [clipboard, setClipboard] = useState<{ type: 'room' | 'door', data: Room | Door } | null>(null);
 
   const handleGeneratePlan = async (prompt: string) => {
     try {
@@ -30,6 +32,7 @@ const FloorPlanApp = () => {
       }));
       setRooms(sanitizedRooms);
       setDoors(plan.doors);
+      setIsPromptModalOpen(false);
     } catch (error) {
       console.error("Failed to generate floor plan:", error);
       alert("Failed to generate floor plan. Please try again.");
@@ -182,6 +185,10 @@ const FloorPlanApp = () => {
       return r;
     }));
   };
+
+  const updateRoomType = (roomId: string, type: string, name: string) => {
+    setRooms(rooms.map(r => r.id === roomId ? { ...r, type, name } : r));
+  };
   
   const toggleWall = (roomId: string, wall: keyof Room['borders']) => {
     setRooms(rooms.map(r => {
@@ -250,6 +257,72 @@ const FloorPlanApp = () => {
     };
   }, [dragState]);
 
+  // --- Keyboard Shortcuts ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input or textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      // Delete
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selection) {
+          if (selection.type === 'room') {
+            setRooms(prev => prev.filter(r => r.id !== selection.id));
+          } else {
+            setDoors(prev => prev.filter(d => d.id !== selection.id));
+          }
+          setSelection(null);
+        }
+      }
+
+      // Copy
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        if (selection) {
+          const item = selection.type === 'room'
+            ? rooms.find(r => r.id === selection.id)
+            : doors.find(d => d.id === selection.id);
+          
+          if (item) {
+            setClipboard({ type: selection.type, data: item });
+          }
+        }
+      }
+
+      // Paste
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        if (clipboard) {
+          if (clipboard.type === 'room') {
+            const roomData = clipboard.data as Room;
+            const newId = `room_${Date.now()}`;
+            const newRoom = {
+              ...roomData,
+              id: newId,
+              name: `${roomData.name} (Copy)`,
+              x: roomData.x + 2,
+              y: roomData.y + 2
+            };
+            setRooms(prev => [...prev, newRoom]);
+            setSelection({ type: 'room', id: newId });
+          } else if (clipboard.type === 'door') {
+            const doorData = clipboard.data as Door;
+            const newId = `door_${Date.now()}`;
+            const newDoor = {
+              ...doorData,
+              id: newId,
+              x: doorData.x + 2,
+              y: doorData.y + 2
+            };
+            setDoors(prev => [...prev, newDoor]);
+            setSelection({ type: 'door', id: newId });
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selection, clipboard, rooms, doors]);
+
   // Derived state for selected item
   const selectedRoom = selection?.type === 'room' ? rooms.find(r => r.id === selection.id) || null : null;
   const selectedDoor = selection?.type === 'door' ? doors.find(d => d.id === selection.id) || null : null;
@@ -258,8 +331,9 @@ const FloorPlanApp = () => {
     <div className="min-h-screen bg-[#e8dfce] p-4 font-serif text-[#3d3124] flex flex-col items-center select-none">
       
       <PromptModal
-        isOpen={rooms.length === 0}
+        isOpen={rooms.length === 0 && isPromptModalOpen}
         onGenerate={handleGeneratePlan}
+        onClose={() => setIsPromptModalOpen(false)}
         isLoading={isGenerating}
       />
 
@@ -283,6 +357,7 @@ const FloorPlanApp = () => {
            showDimensions={showDimensions}
            onMouseDown={handleMouseDown}
            onSelectionClear={() => setSelection(null)}
+           onUpdateRoomType={updateRoomType}
         />
 
         <Sidebar 

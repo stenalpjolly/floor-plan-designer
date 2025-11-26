@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 interface PromptModalProps {
   isOpen: boolean;
   onGenerate: (prompt: string) => Promise<void>;
+  onClose: () => void;
   isLoading: boolean;
 }
 
@@ -15,7 +16,7 @@ const SAMPLE_PROMPTS = [
   "A cozy 1-bedroom flat with a dining area"
 ];
 
-const PromptModal: React.FC<PromptModalProps> = ({ isOpen, onGenerate, isLoading }) => {
+const PromptModal: React.FC<PromptModalProps> = ({ isOpen, onGenerate, onClose, isLoading }) => {
   const [prompt, setPrompt] = useState('');
 
   if (!isOpen) return null;
@@ -29,7 +30,16 @@ const PromptModal: React.FC<PromptModalProps> = ({ isOpen, onGenerate, isLoading
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-8 border border-gray-100">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-8 border border-gray-100 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Design Your Floor Plan</h2>
           <p className="text-gray-500 text-lg">Describe your dream layout and let AI generate it for you.</p>

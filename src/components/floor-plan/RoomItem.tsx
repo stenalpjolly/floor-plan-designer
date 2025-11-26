@@ -8,6 +8,7 @@ interface RoomItemProps {
   dragState: DragState | null;
   showDimensions: boolean;
   onMouseDown: (e: MouseEvent, type: 'room' | 'door', id: string) => void;
+  onContextMenu: (e: MouseEvent, roomId: string) => void;
 }
 
 const getRoomColor = (type: string) => {
@@ -21,10 +22,11 @@ const getRoomColor = (type: string) => {
   }
 };
 
-const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDimensions, onMouseDown }) => {
+const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDimensions, onMouseDown, onContextMenu }) => {
   return (
     <div
       onMouseDown={(e) => onMouseDown(e, 'room', room.id)}
+      onContextMenu={(e) => onContextMenu(e, room.id)}
       onClick={(e) => e.stopPropagation()} 
       className={`absolute flex flex-col items-center justify-center text-center overflow-hidden transition-shadow group
         ${getRoomColor(room.type)}
