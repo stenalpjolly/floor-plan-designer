@@ -59,7 +59,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         accept=".json" 
         className="hidden" 
       />
-      <header className="w-full max-w-7xl mb-4 flex flex-col md:flex-row gap-4 justify-between items-center bg-[#f4ece0] p-4 rounded-lg shadow-sm border border-[#d4c5a9]">
+      <header className="w-full flex flex-col md:flex-row gap-4 justify-between items-center bg-[#f4ece0] p-4 shadow-sm border-b border-[#d4c5a9]">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Home className="w-6 h-6" />

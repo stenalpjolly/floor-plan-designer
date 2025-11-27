@@ -625,7 +625,7 @@ const FloorPlanApp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#e8dfce] p-4 font-serif text-[#3d3124] flex flex-col items-center select-none">
+    <div className="h-screen bg-[#e8dfce] font-serif text-[#3d3124] flex flex-col select-none w-full overflow-hidden">
       
       <PromptModal
         isOpen={rooms.length === 0 && isPromptModalOpen}
@@ -664,7 +664,7 @@ const FloorPlanApp = () => {
         setAppMode={setAppMode}
       />
 
-      <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 h-[80vh]">
+      <div className="flex-grow w-full flex flex-col lg:flex-row overflow-hidden">
         
         <Canvas
            containerRef={containerRef}

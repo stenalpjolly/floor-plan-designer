@@ -83,7 +83,7 @@ const Canvas: React.FC<CanvasProps> = ({
 
   return (
     <div
-      className="flex-grow relative bg-[#f9f5eb] rounded shadow-inner border-[6px] border-[#5c4d3c] overflow-hidden cursor-crosshair w-full h-full"
+      className="flex-grow relative bg-[#f9f5eb] overflow-hidden cursor-crosshair w-full h-full"
       ref={containerRef}
       onClick={onSelectionClear}
       onMouseDown={(e) => onMouseDown(e, 'canvas', 'canvas')}

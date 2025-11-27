@@ -18,8 +18,18 @@ export const RoomSchema = z.object({
   y: z.number().describe("Y coordinate on the grid"),
   w: z.number().describe("Width in grid units"),
   h: z.number().describe("Height in grid units"),
-  type: z.enum(['bedroom', 'bathroom', 'living', 'utility', 'outdoor', 'kitchen', 'dining'])
-    .describe("Type of room for styling purposes"),
+  type: z.enum([
+    'master_bedroom', 'bedroom', 'nursery',
+    'living_formal', 'living_family',
+    'dining', 'breakfast_nook',
+    'kitchen_galley', 'kitchen', 'kitchen_gourmet',
+    'bathroom_master', 'bathroom_full', 'bathroom_three_quarter', 'bathroom_half',
+    'study',
+    'laundry', 'pantry', 'mudroom',
+    'closet_master', 'closet_walkin', 'closet_linen',
+    'garage_1car', 'garage_2car', 'garage_3car',
+    'utility', 'outdoor', 'corridor', 'entrance', 'storage' // Keep legacy/generic types for compatibility
+  ]).describe("Type of room for styling purposes"),
   borders: BorderSchema,
 });
 

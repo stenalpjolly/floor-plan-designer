@@ -1,7 +1,9 @@
-import React from 'react';
-import { Copy, Trash2, MousePointer2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RotateCcw, Layout, Grid, Plus, Minus, AlertTriangle, BedDouble, BedSingle, Sofa, Utensils, Monitor, Archive, Armchair, Flower2, Bath, Droplets, CloudRain } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Copy, Trash2, MousePointer2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RotateCcw, Layout, Grid, Plus, Minus, AlertTriangle, BedDouble, BedSingle, Sofa, Utensils, Monitor, Archive, Armchair, Flower2, Bath, Droplets, CloudRain, Info } from 'lucide-react';
 import { Room, Door, Furniture, Selection } from '@/types';
 import { validateRoom } from '@/utils/validation';
+import { ROOM_STANDARDS, SizeCategory } from '@/data/room-standards';
+import { CANVAS_WIDTH_FT, CANVAS_HEIGHT_FT } from '@/utils/dimensions';
 
 interface SidebarProps {
   appMode: 'structure' | 'interior';
@@ -18,18 +20,6 @@ interface SidebarProps {
   onAddFurniture: (type: string) => void;
   onUpdateFurniture: (id: string, field: keyof Furniture, value: any) => void;
 }
-
-// Preset Definitions for "Smart Types"
-const ROOM_PRESETS = {
-    master_bedroom: { label: 'Master Bed', w: 18, h: 16, color: '#e8dcca' },
-    bedroom: { label: 'Bedroom', w: 14, h: 14, color: '#f0e6d2' },
-    kitchen: { label: 'Kitchen', w: 14, h: 12, color: '#fff0f0' },
-    dining: { label: 'Dining', w: 14, h: 12, color: '#fff8e0' },
-    living: { label: 'Living', w: 20, h: 18, color: '#fdf6e9' },
-    bathroom: { label: 'Bath', w: 8, h: 10, color: '#e0eff1' },
-    corridor: { label: 'Corridor', w: 25, h: 6, color: '#f9f9f9' },
-    garage: { label: 'Garage', w: 20, h: 20, color: '#e0e0e0' },
-};
 
 const FURNITURE_LIBRARY = [
     { type: 'bed_queen', label: 'Queen Bed', icon: <BedDouble className="w-5 h-5" /> },
@@ -62,19 +52,47 @@ const Sidebar: React.FC<SidebarProps> = ({
   onAddFurniture,
   onUpdateFurniture
 }) => {
+  const [sizeCategory, setSizeCategory] = useState<SizeCategory>('standard');
   
+  const groupedStandards = useMemo(() => {
+      const groups: Record<string, typeof ROOM_STANDARDS[string][]> = {};
+      
+      Object.values(ROOM_STANDARDS).forEach(std => {
+        let groupName = 'Other';
+        const v = std.visualType;
+        if (v === 'master_bedroom' || v === 'bedroom') groupName = 'Bedrooms';
+        else if (v === 'living') groupName = 'Living Room';
+        else if (v === 'dining') groupName = 'Dining';
+        else if (v === 'kitchen') groupName = 'Kitchen';
+        else if (v === 'bathroom') groupName = 'Bathrooms';
+        else if (v === 'study') groupName = 'Office';
+        else if (v === 'utility') groupName = 'Utility';
+        else if (v === 'storage') groupName = 'Storage & Closets';
+        else if (v === 'garage') groupName = 'Garage';
+        else if (v === 'entrance') groupName = 'Entrance';
+        
+        if (!groups[groupName]) groups[groupName] = [];
+        groups[groupName].push(std);
+      });
+      
+      return groups;
+  }, []);
+
   const handleApplyPreset = (type: string) => {
       if (!selectedRoom) return;
-      // @ts-ignore
-      const preset = ROOM_PRESETS[type];
-      if (preset) {
+      
+      const standard = ROOM_STANDARDS[type];
+      if (standard) {
           onUpdateRoom(selectedRoom.id, 'type', type);
-          // Update name to match preset if it hasn't been custom renamed (or just always update it for speed)
-          onUpdateRoom(selectedRoom.id, 'name', preset.label);
-          // We do separate updates, or the parent could handle a bulk update.
-          // Ideally we'd add a bulk update method, but calling twice is okay for now.
-          onUpdateRoom(selectedRoom.id, 'w', preset.w);
-          onUpdateRoom(selectedRoom.id, 'h', preset.h);
+          onUpdateRoom(selectedRoom.id, 'name', standard.label);
+          
+          const sizeData = standard.sizes[sizeCategory];
+          // Convert feet to percentage (Feet / TotalFeet * 100)
+          const wPercent = (sizeData.w / CANVAS_WIDTH_FT) * 100;
+          const hPercent = (sizeData.h / CANVAS_HEIGHT_FT) * 100;
+          
+          onUpdateRoom(selectedRoom.id, 'w', wPercent);
+          onUpdateRoom(selectedRoom.id, 'h', hPercent);
       }
   };
 
@@ -102,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const roomValidation = selectedRoom ? validateRoom(selectedRoom) : null;
 
   return (
-    <div className="w-full lg:w-80 flex-shrink-0 bg-[#f4ece0] border-l-4 border-[#d4c5a9] lg:border-l-0 lg:border border-[#d4c5a9] shadow-xl flex flex-col">
+    <div className="w-full lg:w-96 flex-shrink-0 bg-[#f4ece0] border-l border-[#d4c5a9] shadow-xl flex flex-col">
       <div className="p-4 bg-[#5c4d3c] text-[#f4ece0] flex justify-between items-center">
         <h2 className="font-bold text-lg">
           {appMode === 'interior' ? 'Interior Design' : (selectedRoom ? 'Room Properties' : selectedDoor ? 'Door Properties' : 'Structure Editor')}
@@ -186,25 +204,66 @@ const Sidebar: React.FC<SidebarProps> = ({
 
             {/* --- 2. ROOM TYPE PRESETS --- */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-1 flex items-center gap-1">
-                  <Grid className="w-3 h-3"/> Smart Presets
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#8c7b66] mb-2 flex items-center justify-between">
+                 <span className="flex items-center gap-1"><Grid className="w-3 h-3"/> Smart Room Types</span>
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(ROOM_PRESETS).map(([key, preset]) => (
+              
+              {/* Size Category Selector */}
+              <div className="flex bg-white rounded border border-[#d4c5a9] mb-3 p-0.5">
+                  {(['minimal', 'standard', 'luxury'] as const).map((cat) => (
                       <button
-                          key={key}
-                          onClick={() => handleApplyPreset(key)}
-                          className={`text-xs py-2 px-1 rounded border transition-all text-center truncate ${
-                              selectedRoom.type === key
-                              ? 'bg-[#5c4d3c] text-white border-[#5c4d3c] shadow-inner'
-                              : 'bg-white text-[#4a3b2a] border-[#d4c5a9] hover:bg-[#fcf0dc]'
+                          key={cat}
+                          onClick={() => setSizeCategory(cat)}
+                          className={`flex-1 py-1 text-[10px] font-bold uppercase rounded-sm transition-colors ${
+                              sizeCategory === cat
+                              ? 'bg-[#5c4d3c] text-white shadow-sm'
+                              : 'text-[#8c7b66] hover:bg-[#f4ece0]'
                           }`}
-                          style={{ borderLeftWidth: selectedRoom.type === key ? '4px' : '1px', borderLeftColor: preset.color }}
                       >
-                          {preset.label}
+                          {cat}
                       </button>
                   ))}
               </div>
+
+              <div className="max-h-[400px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[#d4c5a9] scrollbar-track-transparent">
+                  {Object.entries(groupedStandards).map(([group, standards]) => (
+                    <div key={group} className="mb-4">
+                        <h4 className="text-[10px] font-bold uppercase text-[#8c7b66] mb-1.5 px-1 flex items-center gap-2">
+                            <span className="h-px flex-grow bg-[#d4c5a9]"></span>
+                            {group}
+                            <span className="h-px flex-grow bg-[#d4c5a9]"></span>
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2">
+                            {standards.map((standard) => (
+                                <button
+                                    key={standard.id}
+                                    onClick={() => handleApplyPreset(standard.id)}
+                                    className={`text-xs py-2 px-2 rounded border transition-all text-left truncate group relative ${
+                                        selectedRoom.type === standard.id
+                                        ? 'bg-[#5c4d3c] text-white border-[#5c4d3c] shadow-inner'
+                                        : 'bg-white text-[#4a3b2a] border-[#d4c5a9] hover:bg-[#fcf0dc]'
+                                    }`}
+                                >
+                                    <div className="font-medium truncate">{standard.label}</div>
+                                    <div className={`text-[9px] truncate ${selectedRoom.type === standard.id ? 'text-white/70' : 'text-[#8c7b66]'}`}>
+                                        {standard.sizes[sizeCategory].description} ({standard.sizes[sizeCategory].w}'x{standard.sizes[sizeCategory].h}')
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                  ))}
+              </div>
+              
+              {/* Active Room Info */}
+              {ROOM_STANDARDS[selectedRoom.type] && (
+                  <div className="mt-2 p-2 bg-[#fffcf5] border border-[#d4c5a9]/50 rounded text-[10px] text-[#5c4d3c]">
+                      <div className="flex gap-1 items-start">
+                        <Info className="w-3 h-3 mt-0.5 flex-shrink-0 text-[#8c7b66]"/>
+                        <p>{ROOM_STANDARDS[selectedRoom.type].considerations}</p>
+                      </div>
+                  </div>
+              )}
             </div>
 
             {/* Name Edit */}
@@ -234,8 +293,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                        <button
                            key={size}
                            onClick={() => {
-                               onUpdateRoom(selectedRoom.id, 'w', size);
-                               onUpdateRoom(selectedRoom.id, 'h', size);
+                               const percent = (size / CANVAS_WIDTH_FT) * 100;
+                               onUpdateRoom(selectedRoom.id, 'w', percent);
+                               onUpdateRoom(selectedRoom.id, 'h', percent);
                            }}
                            className="flex-1 py-1 bg-white border border-[#d4c5a9] rounded text-[10px] font-bold text-[#8c7b66] hover:bg-[#5c4d3c] hover:text-white"
                        >
