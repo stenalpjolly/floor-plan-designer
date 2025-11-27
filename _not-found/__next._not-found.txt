@@ -1,4 +1,4 @@
 1:"$Sreact.fragment"
 2:I[28905,["/floor-plan-designer/_next/static/chunks/d919917577da8461.js"],"default"]
 3:I[3411,["/floor-plan-designer/_next/static/chunks/d919917577da8461.js"],"default"]
-0:{"buildId":"lQdtqf7bmZpAHO0xQky_u","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"9X2krY8GyXJJymqyjS3XN","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}
