@@ -13,6 +13,7 @@ import { generateFloorPlan } from '@/app/actions/generate-plan';
 import { generate3DView } from '@/app/actions/generate-3d-view';
 import { buildFloorPlanPrompt } from '@/utils/prompt-builder';
 import { calculateDimensions, calculateArea } from '@/utils/dimensions';
+import { INTERIOR_ELEMENTS } from '@/data/interior-elements';
 
 const FloorPlanApp = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -591,7 +592,13 @@ const FloorPlanApp = () => {
       // Default dimensions based on type (approximate feet)
       let width = 3;
       let depth = 2;
-      if (type.includes('bed_queen')) { width = 5; depth = 6.5; }
+      
+      const interiorElement = INTERIOR_ELEMENTS.find(item => item.type === type);
+      
+      if (interiorElement) {
+          width = interiorElement.defaultWidth;
+          depth = interiorElement.defaultDepth;
+      } else if (type.includes('bed_queen')) { width = 5; depth = 6.5; }
       else if (type.includes('bed_single')) { width = 3.5; depth = 6.5; }
       else if (type.includes('sofa_3')) { width = 7; depth = 3; }
       else if (type.includes('sofa_2')) { width = 5; depth = 3; }

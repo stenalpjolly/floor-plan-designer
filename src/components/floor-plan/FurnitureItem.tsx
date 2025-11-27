@@ -1,6 +1,7 @@
 import React, { MouseEvent } from 'react';
 import { Furniture, Selection, DragState } from '@/types';
 import { CANVAS_WIDTH_FT, CANVAS_HEIGHT_FT } from '@/utils/dimensions';
+import { INTERIOR_ELEMENTS } from '@/data/interior-elements';
 import { Move } from 'lucide-react';
 
 interface FurnitureItemProps {
@@ -22,12 +23,35 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({ furniture, selection, dra
   const isDragging = dragState?.id === furniture.id && dragState.type === 'furniture';
 
   const renderSVG = () => {
-    const commonStroke = "#4a3b2a";
-    const commonFill = "#fff";
-    const commonStrokeWidth = "2";
-    
-    switch (true) {
-        case furniture.type.includes('bed_queen'):
+  const commonStroke = "#4a3b2a";
+  const commonFill = "#fff";
+  const commonStrokeWidth = "2";
+  
+  // Check for new interior elements
+  const interiorElement = INTERIOR_ELEMENTS.find(el => el.type === furniture.type);
+  if (interiorElement) {
+      // Calculate scale to keep text readable when zoomed out, similar to RoomItem
+      const labelScale = Math.max(1, 1 / viewScale);
+      
+      return (
+           <div className="w-full h-full flex flex-col items-center justify-center overflow-visible">
+              <div className="text-[#5c4d3c] w-full h-full flex items-center justify-center p-[10%]">{interiorElement.icon}</div>
+              
+              {/* Label matched to Room label size and scaling */}
+              <div
+                  className="absolute top-full mt-1 pointer-events-none z-40 origin-top"
+                  style={{ transform: `scale(${labelScale})` }}
+              >
+                  <div className="bg-white/90 text-[#5c4d3c] font-bold text-[0.6rem] md:text-xs lg:text-sm leading-tight px-2 py-1 rounded border border-[#d4c5a9] shadow-sm whitespace-nowrap">
+                      {interiorElement.label}
+                  </div>
+              </div>
+           </div>
+      );
+  }
+
+  switch (true) {
+      case furniture.type.includes('bed_queen'):
             return (
                 <svg viewBox="0 0 100 130" className="w-full h-full">
                     {/* Headboard */}

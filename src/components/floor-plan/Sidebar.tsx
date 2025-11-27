@@ -3,6 +3,7 @@ import { Copy, Trash2, MousePointer2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
 import { Room, Door, Furniture, Selection } from '@/types';
 import { validateRoom } from '@/utils/validation';
 import { ROOM_STANDARDS, SizeCategory } from '@/data/room-standards';
+import { INTERIOR_ELEMENTS } from '@/data/interior-elements';
 import { CANVAS_WIDTH_FT, CANVAS_HEIGHT_FT } from '@/utils/dimensions';
 
 interface SidebarProps {
@@ -494,19 +495,38 @@ const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         {!selection && appMode === 'interior' && (
-             <div className="space-y-4">
-                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Library</h3>
-                 <div className="grid grid-cols-2 gap-2">
-                     {FURNITURE_LIBRARY.map(item => (
-                         <button
-                             key={item.type}
-                             onClick={() => onAddFurniture(item.type)}
-                             className="flex flex-col items-center justify-center p-3 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors gap-2"
-                         >
-                             {item.icon}
-                             <span className="text-xs font-medium">{item.label}</span>
-                         </button>
-                     ))}
+             <div className="space-y-6">
+                 <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Standard Furniture</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                        {FURNITURE_LIBRARY.map(item => (
+                            <button
+                                key={item.type}
+                                onClick={() => onAddFurniture(item.type)}
+                                className="flex flex-col items-center justify-center p-3 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors gap-2"
+                            >
+                                {item.icon}
+                                <span className="text-xs font-medium">{item.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                 </div>
+
+                 <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-[#8c7b66] mb-2">Design Elements</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                        {INTERIOR_ELEMENTS.map(item => (
+                            <button
+                                key={item.type}
+                                onClick={() => onAddFurniture(item.type)}
+                                className="flex flex-col items-center justify-center p-3 bg-white border border-[#d4c5a9] rounded hover:bg-[#5c4d3c] hover:text-white transition-colors gap-2"
+                                title={item.description}
+                            >
+                                <div className="text-[#5c4d3c] group-hover:text-white">{item.icon}</div>
+                                <span className="text-xs font-medium text-center leading-tight">{item.label}</span>
+                            </button>
+                        ))}
+                    </div>
                  </div>
              </div>
         )}
