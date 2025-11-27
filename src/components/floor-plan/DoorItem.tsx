@@ -5,10 +5,11 @@ import { Door, Selection } from '@/types';
 interface DoorItemProps {
   door: Door;
   selection: Selection | null;
+  viewScale?: number;
   onMouseDown: (e: MouseEvent, type: 'room' | 'door', id: string) => void;
 }
 
-const DoorItem: React.FC<DoorItemProps> = ({ door, selection, onMouseDown }) => {
+const DoorItem: React.FC<DoorItemProps> = ({ door, selection, viewScale = 1, onMouseDown }) => {
   // Standard door width (3 ft) relative to canvas dimensions
   // Double doors are wider (6 ft)
   const DOOR_WIDTH_FT = door.width ?? (door.type === 'double' ? 6 : 3);

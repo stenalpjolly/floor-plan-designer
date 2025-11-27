@@ -9,6 +9,7 @@ interface RoomItemProps {
   selection: Selection | null;
   dragState: DragState | null;
   showDimensions: boolean;
+  viewScale: number;
   onMouseDown: (e: MouseEvent, type: 'room' | 'door', id: string) => void;
   onContextMenu: (e: MouseEvent, roomId: string) => void;
 }
@@ -48,15 +49,18 @@ const getRoomColor = (type: string) => {
   }
 };
 
-const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDimensions, onMouseDown, onContextMenu }) => {
+const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDimensions, viewScale, onMouseDown, onContextMenu }) => {
   const validation = validateRoom(room);
+  
+  // Calculate scale to keep text readable when zoomed out
+  const labelScale = Math.max(1, 1 / viewScale);
 
   return (
     <div
       onMouseDown={(e) => onMouseDown(e, 'room', room.id)}
       onContextMenu={(e) => onContextMenu(e, room.id)}
       onClick={(e) => e.stopPropagation()} 
-      className={`absolute flex flex-col items-center justify-center text-center overflow-hidden transition-shadow group
+      className={`absolute flex flex-col items-center justify-center text-center overflow-visible transition-shadow group
         ${getRoomColor(room.type)}
         ${selection?.id === room.id ? 'z-10 shadow-[0_0_0_4px_#d4a373,0_25px_50px_-12px_rgba(0,0,0,0.25)]' : 'z-0 hover:z-10'}
         ${!validation.isValid && selection?.id !== room.id ? 'shadow-[0_0_0_2px_#ef4444]' : ''}
@@ -84,7 +88,10 @@ const RoomItem: React.FC<RoomItemProps> = ({ room, selection, dragState, showDim
          opacity: 0.3
       }}></div>
 
-      <div className="z-10 pointer-events-none px-1">
+      <div
+        className="z-10 pointer-events-none px-1 origin-center"
+        style={{ transform: `scale(${labelScale})` }}
+      >
         <span className="font-bold text-[0.6rem] md:text-xs lg:text-sm leading-tight block">
           {room.name}
         </span>

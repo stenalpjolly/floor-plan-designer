@@ -118,6 +118,7 @@ const Canvas: React.FC<CanvasProps> = ({
                 selection={selection}
                 dragState={dragState}
                 showDimensions={showDimensions}
+                viewScale={viewState.scale}
                 onMouseDown={onMouseDown}
                 onContextMenu={handleRoomContextMenu}
             />
@@ -131,6 +132,7 @@ const Canvas: React.FC<CanvasProps> = ({
                 key={door.id}
                 door={door}
                 selection={selection}
+                viewScale={viewState.scale}
                 onMouseDown={onMouseDown}
             />
             ))}
@@ -144,6 +146,7 @@ const Canvas: React.FC<CanvasProps> = ({
                     furniture={item}
                     selection={selection}
                     dragState={dragState}
+                    viewScale={viewState.scale}
                     onMouseDown={onMouseDown}
                 />
             ))}

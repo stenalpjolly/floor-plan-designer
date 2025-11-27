@@ -7,10 +7,11 @@ interface FurnitureItemProps {
   furniture: Furniture;
   selection: Selection | null;
   dragState: DragState | null;
+  viewScale?: number;
   onMouseDown: (e: MouseEvent, type: 'room' | 'door' | 'furniture', id: string) => void;
 }
 
-const FurnitureItem: React.FC<FurnitureItemProps> = ({ furniture, selection, dragState, onMouseDown }) => {
+const FurnitureItem: React.FC<FurnitureItemProps> = ({ furniture, selection, dragState, viewScale = 1, onMouseDown }) => {
   // Calculate dimensions in percentage relative to canvas
   const widthPercent = (furniture.width / CANVAS_WIDTH_FT) * 100;
   const depthPercent = (furniture.depth / CANVAS_HEIGHT_FT) * 100;
@@ -193,7 +194,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({ furniture, selection, dra
 
       {/* Selection Indicators */}
       {isSelected && (
-          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-[#3b82f6] text-white text-[10px] px-1 rounded whitespace-nowrap pointer-events-none">
+          <div
+            className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-[#3b82f6] text-white text-[10px] px-1 rounded whitespace-nowrap pointer-events-none origin-center"
+            style={{ transform: `translateX(-50%) scale(${Math.max(1, 1 / viewScale)})` }}
+          >
                {furniture.width}' x {furniture.depth}'
           </div>
       )}
