@@ -422,11 +422,12 @@ const FloorPlanApp = () => {
 
   // --- Export / Import Operations ---
   const downloadConfig = () => {
-    const config = { 
+    const config = {
         version: "1.0",
         timestamp: Date.now(),
-        rooms, 
-        doors 
+        rooms,
+        doors,
+        furniture
     };
     const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
